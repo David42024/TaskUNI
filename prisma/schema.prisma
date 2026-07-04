@@ -1,0 +1,337 @@
+// TaskUni - Schema de base de datos
+// PostgreSQL, normalizado hasta 3FN, nombres en español
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  estudiante
+  administrador
+}
+
+enum EstadoUsuario {
+  activo
+  inactivo
+  suspendido
+}
+
+enum TipoPlan {
+  gratuito
+  premium
+}
+
+enum EstadoSuscripcion {
+  activa
+  vencida
+  cancelada
+}
+
+enum PrioridadTarea {
+  baja
+  media
+  alta
+}
+
+enum EstadoTarea {
+  pendiente
+  en_progreso
+  completada
+  vencida
+}
+
+enum EstadoProyecto {
+  planificacion
+  en_progreso
+  completado
+  atrasado
+}
+
+enum EstadoIntegrante {
+  activo
+  invitado
+  removido
+}
+
+enum TipoRecordatorio {
+  basico
+  inteligente
+}
+
+enum EstadoRecordatorio {
+  pendiente
+  enviado
+  descartado
+}
+
+enum TipoEvento {
+  entrega
+  reunion
+  examen
+  otro
+}
+
+enum EstadoConsulta {
+  pendiente
+  respondida
+  cerrada
+}
+
+enum EstadoPago {
+  aprobado
+  rechazado
+  pendiente
+}
+
+model Usuario {
+  id_usuario      String   @id @default(cuid())
+  nombres         String
+  apellidos       String
+  correo          String   @db.VarChar(150)
+  correo_norm     String   @unique // correo en minúsculas para índice único case-insensitive
+  contrasena_hash String
+  rol             Rol      @default(estudiante)
+  estado          EstadoUsuario @default(activo)
+  fecha_registro  DateTime @default(now())
+  ultimo_acceso   DateTime?
+
+  perfil_estudiante   PerfilEstudiante?
+  suscripciones       Suscripcion[]
+  cursos              Curso[]
+  tareas              Tarea[]
+  proyectos_creados   Proyecto[]        @relation("ProyectosCreados")
+  integraciones       IntegranteProyecto[]
+  tareas_asignadas    TareaProyecto[]
+  recordatorios       Recordatorio[]
+  eventos_calendario  EventoCalendario[]
+  consultas_soporte   ConsultaSoporte[]
+  reportes            ReporteProductividad[]
+  pagos               Pago[]
+
+  @@map("usuario")
+}
+
+model PerfilEstudiante {
+  id_perfil        String  @id @default(cuid())
+  id_usuario       String  @unique
+  universidad      String
+  carrera          String
+  ciclo_academico  String
+  codigo_estudiante String?
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+
+  @@map("perfil_estudiante")
+}
+
+model Plan {
+  id_plan         String   @id @default(cuid())
+  nombre_plan     String
+  descripcion     String
+  precio_mensual  Decimal  @db.Decimal(10, 2)
+  tipo_plan       TipoPlan
+  estado          String   @default("activo")
+
+  suscripciones Suscripcion[]
+
+  @@map("plan")
+}
+
+model Suscripcion {
+  id_suscripcion    String            @id @default(cuid())
+  id_usuario        String
+  id_plan           String
+  fecha_inicio      DateTime          @default(now())
+  fecha_fin         DateTime?
+  estado_suscripcion EstadoSuscripcion @default(activa)
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+  plan    Plan    @relation(fields: [id_plan], references: [id_plan])
+  pagos   Pago[]
+
+  @@index([id_usuario])
+  @@map("suscripcion")
+}
+
+model Curso {
+  id_curso    String   @id @default(cuid())
+  id_usuario  String
+  nombre_curso String
+  docente     String?
+  ciclo       String?
+  estado      String   @default("activo")
+
+  usuario   Usuario     @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+  tareas    Tarea[]
+  proyectos Proyecto[]
+
+  @@index([id_usuario])
+  @@map("curso")
+}
+
+model Tarea {
+  id_tarea          String         @id @default(cuid())
+  id_usuario        String
+  id_curso          String?
+  titulo            String
+  descripcion       String?
+  fecha_limite      DateTime?
+  prioridad         PrioridadTarea @default(media)
+  estado_tarea      EstadoTarea    @default(pendiente)
+  avance_porcentual Int            @default(0)
+  fecha_creacion    DateTime       @default(now())
+  fecha_actualizacion DateTime     @updatedAt
+
+  usuario       Usuario        @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+  curso         Curso?         @relation(fields: [id_curso], references: [id_curso])
+  recordatorios Recordatorio[]
+
+  @@index([id_usuario])
+  @@index([id_curso])
+  @@map("tarea")
+}
+
+model Proyecto {
+  id_proyecto        String         @id @default(cuid())
+  id_usuario_creador String
+  id_curso           String?
+  nombre_proyecto    String
+  descripcion        String?
+  fecha_entrega      DateTime?
+  estado_proyecto    EstadoProyecto @default(planificacion)
+  avance_general     Int            @default(0)
+  fecha_creacion     DateTime       @default(now())
+
+  creador       Usuario              @relation("ProyectosCreados", fields: [id_usuario_creador], references: [id_usuario], onDelete: Cascade)
+  curso         Curso?               @relation(fields: [id_curso], references: [id_curso])
+  integrantes   IntegranteProyecto[]
+  tareas        TareaProyecto[]
+  recordatorios Recordatorio[]
+
+  @@index([id_usuario_creador])
+  @@map("proyecto")
+}
+
+model IntegranteProyecto {
+  id_integrante   String           @id @default(cuid())
+  id_proyecto     String
+  id_usuario      String
+  rol_en_proyecto String           @default("colaborador")
+  responsabilidad String?
+  estado          EstadoIntegrante @default(invitado)
+
+  proyecto Proyecto @relation(fields: [id_proyecto], references: [id_proyecto], onDelete: Cascade)
+  usuario  Usuario  @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+
+  @@unique([id_proyecto, id_usuario])
+  @@map("integrante_proyecto")
+}
+
+model TareaProyecto {
+  id_tarea_proyecto String         @id @default(cuid())
+  id_proyecto       String
+  id_usuario_asignado String?
+  titulo            String
+  descripcion       String?
+  estado            EstadoTarea    @default(pendiente)
+  prioridad         PrioridadTarea @default(media)
+  fecha_limite      DateTime?
+  avance_porcentual Int            @default(0)
+
+  proyecto Proyecto @relation(fields: [id_proyecto], references: [id_proyecto], onDelete: Cascade)
+  asignado Usuario? @relation(fields: [id_usuario_asignado], references: [id_usuario])
+
+  @@index([id_proyecto])
+  @@map("tarea_proyecto")
+}
+
+model Recordatorio {
+  id_recordatorio    String              @id @default(cuid())
+  id_usuario         String
+  id_tarea           String?
+  id_proyecto        String?
+  titulo             String
+  descripcion        String?
+  fecha_recordatorio DateTime
+  tipo_recordatorio  TipoRecordatorio    @default(basico)
+  estado             EstadoRecordatorio  @default(pendiente)
+
+  usuario  Usuario   @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+  tarea    Tarea?    @relation(fields: [id_tarea], references: [id_tarea], onDelete: Cascade)
+  proyecto Proyecto? @relation(fields: [id_proyecto], references: [id_proyecto], onDelete: Cascade)
+
+  @@index([id_usuario])
+  @@map("recordatorio")
+}
+
+model EventoCalendario {
+  id_evento    String     @id @default(cuid())
+  id_usuario   String
+  titulo       String
+  descripcion  String?
+  tipo_evento  TipoEvento @default(otro)
+  fecha_inicio DateTime
+  fecha_fin    DateTime?
+  ubicacion    String?
+  estado       String     @default("programado")
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+
+  @@index([id_usuario])
+  @@map("evento_calendario")
+}
+
+model ConsultaSoporte {
+  id_consulta      String         @id @default(cuid())
+  id_usuario       String
+  asunto           String
+  mensaje          String
+  estado_consulta  EstadoConsulta @default(pendiente)
+  fecha_envio      DateTime       @default(now())
+  fecha_respuesta  DateTime?
+  respuesta        String?
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+
+  @@index([id_usuario])
+  @@map("consulta_soporte")
+}
+
+model ReporteProductividad {
+  id_reporte             String   @id @default(cuid())
+  id_usuario             String
+  periodo                String
+  total_tareas           Int      @default(0)
+  tareas_completadas     Int      @default(0)
+  tareas_pendientes      Int      @default(0)
+  tareas_vencidas        Int      @default(0)
+  porcentaje_cumplimiento Int     @default(0)
+  racha_productividad    Int      @default(0)
+  fecha_generacion       DateTime @default(now())
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+
+  @@index([id_usuario])
+  @@map("reporte_productividad")
+}
+
+model Pago {
+  id_pago        String     @id @default(cuid())
+  id_usuario     String
+  id_suscripcion String
+  monto          Decimal    @db.Decimal(10, 2)
+  metodo_pago    String
+  estado_pago    EstadoPago @default(pendiente)
+  fecha_pago     DateTime   @default(now())
+
+  usuario     Usuario     @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+  suscripcion Suscripcion @relation(fields: [id_suscripcion], references: [id_suscripcion], onDelete: Cascade)
+
+  @@index([id_usuario])
+  @@map("pago")
+}

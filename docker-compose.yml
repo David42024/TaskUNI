@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: taskuni_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: taskuni
+      POSTGRES_PASSWORD: taskuni_pass
+      POSTGRES_DB: taskuni_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - taskuni_pgdata:/var/lib/postgresql/data
+
+volumes:
+  taskuni_pgdata:
