@@ -513,7 +513,7 @@ async function main() {
         },
         tareas: {
           create: [
-            { titulo: "Definir propuesta de valor", state: undefined as never, estado: EstadoTarea.completada, prioridad: PrioridadTarea.alta, fecha_limite: enDias(-2), avance_porcentual: 100, id_usuario_asignado: usuariosPorKey.sofia.id_usuario },
+            { titulo: "Definir propuesta de valor", estado: EstadoTarea.completada, prioridad: PrioridadTarea.alta, fecha_limite: enDias(-2), avance_porcentual: 100, id_usuario_asignado: usuariosPorKey.sofia.id_usuario },
             { titulo: "Costos y rentabilidad", estado: EstadoTarea.en_progreso, prioridad: PrioridadTarea.alta, fecha_limite: enDias(5), avance_porcentual: 65, id_usuario_asignado: usuariosPorKey.laura.id_usuario },
             { titulo: "Demo funcional", estado: EstadoTarea.pendiente, prioridad: PrioridadTarea.media, fecha_limite: enDias(9), avance_porcentual: 20, id_usuario_asignado: usuariosPorKey.manuel.id_usuario },
             { titulo: "Pitch comercial", estado: EstadoTarea.pendiente, prioridad: PrioridadTarea.media, fecha_limite: enDias(11), avance_porcentual: 0, id_usuario_asignado: usuariosPorKey.sofia.id_usuario },

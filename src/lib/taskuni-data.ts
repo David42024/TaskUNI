@@ -294,7 +294,7 @@ export async function getAdminOverview() {
       include: { usuario: { select: { nombres: true, apellidos: true, correo: true } } },
     }),
     prisma.pago.findMany({ include: { usuario: { select: { nombres: true, apellidos: true, correo: true } }, suscripcion: { include: { plan: true } } }, orderBy: { fecha_pago: "desc" }, take: 20 }),
-    prisma.usuario.findMany({ where: { rol: "estudiante" }, include: { perfil_estudiante: true }, orderBy: { fecha_registro: "asc" } }),
+    prisma.usuario.findMany({ where: { rol: "estudiante" }, include: { perfil_estudiante: true, suscripciones: { include: { plan: true } } }, orderBy: { fecha_registro: "asc" } }),
     prisma.tarea.findMany({ include: { usuario: { select: { nombres: true, apellidos: true, correo: true } }, curso: true }, orderBy: { fecha_limite: "asc" } }),
     prisma.proyecto.findMany({ include: { creador: { select: { nombres: true, apellidos: true } }, curso: true, integrantes: true, tareas: true }, orderBy: { fecha_creacion: "desc" } }),
     prisma.curso.findMany({ include: { usuario: { select: { nombres: true, apellidos: true, correo: true } }, tareas: true, proyectos: true }, orderBy: { nombre_curso: "asc" } }),

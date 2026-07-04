@@ -240,10 +240,10 @@ La campanita de notificaciones se genera dinámicamente desde la base de datos. 
 | Integrante | Responsabilidad |
 |---|---|
 | David | Coordinación general, base de datos y dashboard |
-| Bilton | Módulo estudiante y tareas |
+| Jorge | Módulo estudiante y tareas |
 | Roberto | Proyectos, calendario y productividad |
 | Takeshy | Admin, planes, finanzas y reportes |
-| Adrian | UI, soporte, marketing y documentación |
+|  | UI, soporte, marketing y documentación |
 
 ## Estado del proyecto
 

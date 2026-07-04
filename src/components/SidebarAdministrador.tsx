@@ -45,7 +45,7 @@ type Item = {
   href: string;
   label: string;
   description: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: React.ComponentType<any>;
   badge?: string | number;
 };
 

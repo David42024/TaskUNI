@@ -49,7 +49,7 @@ export default async function AdminUsuarioDetallePage({ params }: { params: { id
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="card"><h3 className="mb-3 font-semibold text-slate-800 dark:text-white">Suscripciones</h3>{usuario.suscripciones.map((s) => <div key={s.id_suscripcion} className="mb-2 rounded-2xl border border-slate-200 p-3 dark:border-white/10"><p className="font-medium text-slate-900 dark:text-white">{s.plan.nombre_plan}</p><p className="text-xs text-slate-400">{s.estado_suscripcion} · {new Date(s.fecha_inicio).toLocaleDateString("es-PE")}</p></div>)}</div>
-        <div className="card"><h3 className="mb-3 font-semibold text-slate-800 dark:text-white">Pagos</h3>{usuario.pagos.map((p) => <div key={p.id_pago} className="mb-2 rounded-2xl border border-slate-200 p-3 dark:border-white/10"><p className="font-medium text-slate-900 dark:text-white">{formatMoney(p.monto)} · {p.metodo_pago}</p><p className="text-xs text-slate-400">{p.estado_pago} · {new Date(p.fecha_pago).toLocaleDateString("es-PE")}</p></div>)}</div>
+        <div className="card"><h3 className="mb-3 font-semibold text-slate-800 dark:text-white">Pagos</h3>{usuario.pagos.map((p) => <div key={p.id_pago} className="mb-2 rounded-2xl border border-slate-200 p-3 dark:border-white/10"><p className="font-medium text-slate-900 dark:text-white">{formatMoney(Number(p.monto))} · {p.metodo_pago}</p><p className="text-xs text-slate-400">{p.estado_pago} · {new Date(p.fecha_pago).toLocaleDateString("es-PE")}</p></div>)}</div>
       </div>
     </div>
   );

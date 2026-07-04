@@ -28,7 +28,7 @@ export default async function ProductividadPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <CardResumen titulo="Cumplimiento" valor={`${ultimoReporte?.porcentaje_cumplimiento ?? 0}%`} icon={Target} color="brand" />
         <CardResumen titulo="Racha" valor={`${ultimoReporte?.racha_productividad ?? 0} días`} icon={BarChart3} color="green" />
-        <CardResumen titulo="Tareas completadas" valor={completadas} icon={CheckCircle2} color="emerald" />
+        <CardResumen titulo="Tareas completadas" valor={completadas} icon={CheckCircle2} color="green" />
         <CardResumen titulo="Tareas vencidas" valor={vencidas} icon={Clock3} color="red" />
       </div>
 
