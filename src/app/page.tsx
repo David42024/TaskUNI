@@ -85,10 +85,10 @@ export default function LandingPage() {
             <span className="badge bg-brand-100 text-brand-700">
               Plataforma académica digital
             </span>
-            <h1 className="mt-4 text-4xl font-bold leading-tight text-slate-900 sm:text-5xl">
+            <h1 className="mt-4 text-4xl font-bold leading-tight text-slate-900 dark:text-white sm:text-5xl">
               Organiza tu vida universitaria en un solo lugar
             </h1>
-            <p className="mt-4 text-lg text-slate-600">
+            <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
               TaskUni centraliza tus tareas, fechas de entrega, proyectos grupales,
               recordatorios y productividad académica, para que dejes de depender de
               notas, chats y hojas de cálculo dispersas.
@@ -127,20 +127,20 @@ export default function LandingPage() {
       </section>
 
       {/* Problema / Solución */}
-      <section className="bg-white py-16">
+      <section className="bg-white py-16 dark:bg-slate-900/40">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid gap-10 md:grid-cols-2">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">El problema</h2>
-              <p className="mt-3 text-slate-600">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">El problema</h2>
+              <p className="mt-3 text-slate-600 dark:text-slate-400">
                 Los estudiantes usan notas, calendarios, grupos de mensajería y hojas de
                 cálculo por separado. Esto genera desorganización, pérdida de información,
                 incumplimiento de plazos y dificultad para coordinar trabajos grupales.
               </p>
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">La solución</h2>
-              <p className="mt-3 text-slate-600">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">La solución</h2>
+              <p className="mt-3 text-slate-600 dark:text-slate-400">
                 TaskUni centraliza tareas, proyectos, calendario y recordatorios en una
                 sola plataforma web y móvil, diseñada específicamente para la vida
                 universitaria y el trabajo colaborativo entre compañeros.
@@ -153,18 +153,18 @@ export default function LandingPage() {
       {/* Funciones */}
       <section id="funciones" className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <h2 className="text-center text-3xl font-bold text-slate-900">Funciones principales</h2>
-          <p className="mx-auto mt-2 max-w-xl text-center text-slate-600">
+          <h2 className="text-center text-3xl font-bold text-slate-900 dark:text-white">Funciones principales</h2>
+          <p className="mx-auto mt-2 max-w-xl text-center text-slate-600 dark:text-slate-400">
             Todo lo que necesitas para mantener el control de tus estudios y tus equipos.
           </p>
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {funciones.map(({ icon: Icon, titulo, descripcion }) => (
               <div key={titulo} className="card">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-400">
                   <Icon size={22} />
                 </div>
-                <h3 className="mt-4 font-semibold text-slate-900">{titulo}</h3>
-                <p className="mt-1 text-sm text-slate-600">{descripcion}</p>
+                <h3 className="mt-4 font-semibold text-slate-900 dark:text-white">{titulo}</h3>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{descripcion}</p>
               </div>
             ))}
           </div>
@@ -172,10 +172,10 @@ export default function LandingPage() {
       </section>
 
       {/* Planes */}
-      <section id="planes" className="bg-white py-16">
+      <section id="planes" className="bg-white py-16 dark:bg-slate-900/40">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <h2 className="text-center text-3xl font-bold text-slate-900">Planes</h2>
-          <p className="mx-auto mt-2 max-w-xl text-center text-slate-600">
+          <h2 className="text-center text-3xl font-bold text-slate-900 dark:text-white">Planes</h2>
+          <p className="mx-auto mt-2 max-w-xl text-center text-slate-600 dark:text-slate-400">
             Empieza gratis y actualiza cuando necesites más funciones.
           </p>
           <div className="mt-10 grid gap-6 sm:grid-cols-2">
@@ -187,13 +187,13 @@ export default function LandingPage() {
                 {p.destacado && (
                   <span className="badge mb-3 bg-white/20 text-white">Más elegido</span>
                 )}
-                <h3 className={p.destacado ? "text-xl font-bold text-white" : "text-xl font-bold text-slate-900"}>
+                <h3 className={p.destacado ? "text-xl font-bold text-white" : "text-xl font-bold text-slate-900 dark:text-white"}>
                   {p.nombre}
                 </h3>
-                <p className={p.destacado ? "mt-1 text-brand-100" : "mt-1 text-slate-500"}>
+                <p className={p.destacado ? "mt-1 text-brand-100" : "mt-1 text-slate-500 dark:text-slate-400"}>
                   {p.descripcion}
                 </p>
-                <p className={p.destacado ? "mt-4 text-3xl font-bold text-white" : "mt-4 text-3xl font-bold text-slate-900"}>
+                <p className={p.destacado ? "mt-4 text-3xl font-bold text-white" : "mt-4 text-3xl font-bold text-slate-900 dark:text-white"}>
                   {p.precio}
                 </p>
                 <ul className="mt-6 space-y-2">
@@ -202,10 +202,10 @@ export default function LandingPage() {
                       key={b}
                       className={
                         "flex items-center gap-2 text-sm " +
-                        (p.destacado ? "text-brand-50" : "text-slate-600")
+                        (p.destacado ? "text-brand-50" : "text-slate-600 dark:text-slate-300")
                       }
                     >
-                      <Check size={16} className={p.destacado ? "text-white" : "text-brand-600"} />
+                      <Check size={16} className={p.destacado ? "text-white" : "text-brand-600 dark:text-brand-400"} />
                       {b}
                     </li>
                   ))}
@@ -222,13 +222,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Contacto / CTA final */}
       <section id="contacto" className="py-16">
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
-          <h2 className="text-3xl font-bold text-slate-900">
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
             ¿Listo para organizar tu vida universitaria?
           </h2>
-          <p className="mt-3 text-slate-600">
+          <p className="mt-3 text-slate-600 dark:text-slate-400">
             Crea tu cuenta gratuita en minutos y empieza a centralizar tus tareas, proyectos y
             recordatorios.
           </p>
@@ -243,7 +242,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="border-t border-slate-200 bg-white py-8 text-center text-sm text-slate-400">
+      <footer className="border-t border-slate-200 bg-white py-8 text-center text-sm text-slate-400 dark:border-white/10 dark:bg-slate-950 dark:text-slate-500">
         © {new Date().getFullYear()} TaskUni. Plataforma académica digital para estudiantes universitarios.
       </footer>
     </div>

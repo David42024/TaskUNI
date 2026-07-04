@@ -243,7 +243,7 @@ La campanita de notificaciones se genera dinámicamente desde la base de datos. 
 | Jorge | Módulo estudiante y tareas |
 | Roberto | Proyectos, calendario y productividad |
 | Takeshy | Admin, planes, finanzas y reportes |
-|  | UI, soporte, marketing y documentación |
+| Celeste | UI, soporte, marketing y documentación |
 
 ## Estado del proyecto
 
