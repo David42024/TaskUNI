@@ -100,18 +100,18 @@ model Usuario {
   fecha_registro  DateTime      @default(now())
   ultimo_acceso   DateTime?
 
-  perfil_estudiante  PerfilEstudiante?
-  suscripciones      Suscripcion[]
-  cursos             Curso[]
-  tareas             Tarea[]
-  proyectos_creados  Proyecto[]             @relation("ProyectosCreados")
-  integraciones      IntegranteProyecto[]
-  tareas_asignadas   TareaProyecto[]
-  recordatorios      Recordatorio[]
-  eventos_calendario EventoCalendario[]
-  consultas_soporte  ConsultaSoporte[]
-  reportes           ReporteProductividad[]
-  pagos              Pago[]
+  perfil_estudiante    PerfilEstudiante?
+  suscripciones        Suscripcion[]
+  cursos               Curso[]
+  tareas               Tarea[]
+  proyectos_creados    Proyecto[]             @relation("ProyectosCreados")
+  integrantes_proyecto IntegranteProyecto[]
+  tareas_asignadas     TareaProyecto[]
+  recordatorios        Recordatorio[]
+  eventos_calendario   EventoCalendario[]
+  consultas_soporte    ConsultaSoporte[]
+  reportes             ReporteProductividad[]
+  pagos                Pago[]
 
   @@map("usuario")
 }
@@ -131,7 +131,7 @@ model PerfilEstudiante {
 
 model Plan {
   id_plan        String   @id @default(cuid())
-  nombre_plan    String
+  nombre_plan    String   @unique
   descripcion    String
   precio_mensual Decimal  @db.Decimal(10, 2)
   tipo_plan      TipoPlan
@@ -155,6 +155,9 @@ model Suscripcion {
   pagos   Pago[]
 
   @@index([id_usuario])
+  @@index([id_plan])
+  @@index([estado_suscripcion])
+  @@index([id_usuario, estado_suscripcion])
   @@map("suscripcion")
 }
 
@@ -188,11 +191,15 @@ model Tarea {
   fecha_actualizacion DateTime       @updatedAt
 
   usuario       Usuario        @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
-  curso         Curso?         @relation(fields: [id_curso], references: [id_curso])
+  curso         Curso?         @relation(fields: [id_curso], references: [id_curso], onDelete: SetNull)
   recordatorios Recordatorio[]
 
   @@index([id_usuario])
   @@index([id_curso])
+  @@index([estado_tarea])
+  @@index([prioridad])
+  @@index([fecha_limite])
+  @@index([id_usuario, estado_tarea])
   @@map("tarea")
 }
 
@@ -208,12 +215,14 @@ model Proyecto {
   fecha_creacion     DateTime       @default(now())
 
   creador       Usuario              @relation("ProyectosCreados", fields: [id_usuario_creador], references: [id_usuario], onDelete: Cascade)
-  curso         Curso?               @relation(fields: [id_curso], references: [id_curso])
+  curso         Curso?               @relation(fields: [id_curso], references: [id_curso], onDelete: SetNull)
   integrantes   IntegranteProyecto[]
   tareas        TareaProyecto[]
   recordatorios Recordatorio[]
 
   @@index([id_usuario_creador])
+  @@index([id_curso])
+  @@index([estado_proyecto])
   @@map("proyecto")
 }
 
@@ -229,6 +238,8 @@ model IntegranteProyecto {
   usuario  Usuario  @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
 
   @@unique([id_proyecto, id_usuario])
+  @@index([id_usuario])
+  @@index([estado])
   @@map("integrante_proyecto")
 }
 
@@ -244,9 +255,10 @@ model TareaProyecto {
   avance_porcentual   Int            @default(0)
 
   proyecto Proyecto @relation(fields: [id_proyecto], references: [id_proyecto], onDelete: Cascade)
-  asignado Usuario? @relation(fields: [id_usuario_asignado], references: [id_usuario])
+  asignado Usuario? @relation(fields: [id_usuario_asignado], references: [id_usuario], onDelete: SetNull)
 
   @@index([id_proyecto])
+  @@index([id_usuario_asignado])
   @@map("tarea_proyecto")
 }
 
@@ -266,6 +278,9 @@ model Recordatorio {
   proyecto Proyecto? @relation(fields: [id_proyecto], references: [id_proyecto], onDelete: Cascade)
 
   @@index([id_usuario])
+  @@index([id_tarea])
+  @@index([id_proyecto])
+  @@index([fecha_recordatorio])
   @@map("recordatorio")
 }
 
@@ -283,6 +298,8 @@ model EventoCalendario {
   usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
 
   @@index([id_usuario])
+  @@index([fecha_inicio])
+  @@index([id_usuario, fecha_inicio])
   @@map("evento_calendario")
 }
 
@@ -299,6 +316,8 @@ model ConsultaSoporte {
   usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
 
   @@index([id_usuario])
+  @@index([estado_consulta])
+  @@index([fecha_envio])
   @@map("consulta_soporte")
 }
 
@@ -317,6 +336,8 @@ model ReporteProductividad {
   usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
 
   @@index([id_usuario])
+  @@index([fecha_generacion])
+  @@index([id_usuario, fecha_generacion])
   @@map("reporte_productividad")
 }
 
@@ -333,5 +354,8 @@ model Pago {
   suscripcion Suscripcion @relation(fields: [id_suscripcion], references: [id_suscripcion], onDelete: Cascade)
 
   @@index([id_usuario])
+  @@index([id_suscripcion])
+  @@index([estado_pago])
+  @@index([fecha_pago])
   @@map("pago")
 }

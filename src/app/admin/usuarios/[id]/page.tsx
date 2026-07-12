@@ -12,7 +12,7 @@ export default async function AdminUsuarioDetallePage({ params }: { params: { id
       cursos: true,
       tareas: true,
       proyectos_creados: { include: { curso: true } },
-      integraciones: { include: { proyecto: true } },
+      integrantes_proyecto: { include: { proyecto: true } },
       consultas_soporte: true,
       reportes: true,
       pagos: { include: { suscripcion: { include: { plan: true } } }, orderBy: { fecha_pago: "desc" } },
