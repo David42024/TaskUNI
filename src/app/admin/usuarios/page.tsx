@@ -6,12 +6,25 @@ import TablaUsuarios, { UsuarioVista } from "@/components/TablaUsuarios";
 export default function AdminUsuariosPage() {
   const [usuarios, setUsuarios] = useState<UsuarioVista[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   async function cargar() {
     setCargando(true);
-    const res = await fetch("/api/admin/usuarios");
-    setUsuarios(await res.json());
-    setCargando(false);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/usuarios");
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError(body?.error ?? `Error ${res.status}`);
+        setUsuarios([]);
+      } else {
+        setUsuarios(await res.json());
+      }
+    } catch (e) {
+      setError("No se pudo conectar con el servidor.");
+    } finally {
+      setCargando(false);
+    }
   }
 
   useEffect(() => {
@@ -36,6 +49,8 @@ export default function AdminUsuariosPage() {
 
       {cargando ? (
         <div className="card text-center text-slate-400">Cargando usuarios...</div>
+      ) : error ? (
+        <div className="card text-center text-red-500">{error}</div>
       ) : (
         <TablaUsuarios usuarios={usuarios} onCambiarEstado={handleCambiarEstado} />
       )}
