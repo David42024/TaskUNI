@@ -94,9 +94,27 @@ function ArchivosContenido() {
       fetch("/api/proyectos"),
       fetch(`/api/archivos?${params.toString()}`),
     ]);
+
+    if (!resCursos.ok) {
+      console.error("Error fetching cursos:", resCursos.status);
+      setCargando(false);
+      return;
+    }
     setCursos(await resCursos.json());
+
+    if (!resProyectos.ok) {
+      console.error("Error fetching proyectos:", resProyectos.status);
+      setCargando(false);
+      return;
+    }
     const proyectosData = await resProyectos.json();
     setProyectos(proyectosData.map((p: any) => ({ id_proyecto: p.id_proyecto, nombre_proyecto: p.nombre_proyecto })));
+
+    if (!resArchivos.ok) {
+      console.error("Error fetching archivos:", resArchivos.status);
+      setCargando(false);
+      return;
+    }
     setArchivos(await resArchivos.json());
     setCargando(false);
   }
