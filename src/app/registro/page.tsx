@@ -63,8 +63,8 @@ export default function RegistroPage() {
       <Navbar />
       <div className="mx-auto flex max-w-lg flex-col justify-center px-4 py-12">
         <div className="card">
-          <h1 className="text-2xl font-bold text-slate-900">Crea tu cuenta gratuita</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Crea tu cuenta gratuita</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Empieza a organizar tus tareas y proyectos en minutos.
           </p>
 
@@ -156,7 +156,7 @@ export default function RegistroPage() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-slate-500">
+          <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
             ¿Ya tienes cuenta?{" "}
             <Link href="/login" className="font-medium text-brand-600 hover:underline">
               Inicia sesión

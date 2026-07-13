@@ -43,8 +43,8 @@ export default function LoginPage() {
       <Navbar />
       <div className="mx-auto flex min-h-[80vh] max-w-md flex-col justify-center px-4 py-12">
         <div className="card">
-          <h1 className="text-2xl font-bold text-slate-900">Iniciar sesión</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Iniciar sesión</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Accede a tu panel de TaskUni.
           </p>
 
@@ -74,7 +74,7 @@ export default function LoginPage() {
                 placeholder="••••••••"
               />
               <div className="mt-1 text-right">
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-slate-400 dark:text-slate-500">
                   ¿Olvidaste tu contraseña? Contacta a soporte.
                 </span>
               </div>
@@ -84,15 +84,15 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-slate-500">
+          <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
             ¿No tienes cuenta?{" "}
             <Link href="/registro" className="font-medium text-brand-600 hover:underline">
               Regístrate gratis
             </Link>
           </p>
 
-          <div className="mt-6 rounded-lg bg-slate-50 p-3 text-xs text-slate-500">
-            <p className="font-medium text-slate-600">Cuentas de prueba (seed):</p>
+          <div className="mt-6 rounded-lg bg-slate-50 p-3 text-xs text-slate-500 dark:bg-white/5 dark:text-slate-400">
+            <p className="font-medium text-slate-600 dark:text-slate-300">Cuentas de prueba (seed):</p>
             <p>Administrador: admin@taskuni.edu.pe</p>
             <p>Estudiante: manuel.torres@unt.edu.pe</p>
             <p>Contraseña: Password123!</p>
