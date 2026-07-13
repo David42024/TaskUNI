@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Download, Printer, RotateCcw, Users, Crown, DollarSign, ListChecks, FolderKanban, LifeBuoy, FileText } from "lucide-react";
 
 type ReportType = "usuarios" | "suscripciones-pagos" | "academico" | "soporte" | "ejecutivo";
@@ -27,7 +27,7 @@ type Props = {
 const labels: Record<ReportType, string> = {
   usuarios: "Reporte de usuarios",
   "suscripciones-pagos": "Reporte de suscripciones y pagos",
-  academico: "Reporte académico de uso",
+  academico: "Reporte academico de uso",
   soporte: "Reporte de soporte",
   ejecutivo: "Reporte ejecutivo del e-Business",
 };
@@ -36,11 +36,33 @@ function money(value: number) {
   return `S/ ${value.toFixed(2)}`;
 }
 
-function createCsv(rows: Record<string, string | number>[]) {
+/**
+ * Builds a CSV string from an array of row objects.
+ * Collects ALL unique keys across every row so that mixed-column datasets
+ * (e.g. suscripciones + pagos combined) produce a complete header row
+ * instead of silently dropping columns that only appear in later rows.
+ */
+function createCsv(rows: Record<string, string | number | undefined>[]) {
   if (rows.length === 0) return "";
-  const headers = Object.keys(rows[0]);
-  const escape = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
-  return [headers.join(","), ...rows.map((row) => headers.map((header) => escape(row[header])).join(","))].join("\n");
+
+  // Collect every unique key across ALL rows, preserving insertion order
+  const headerSet = new Set<string>();
+  for (const row of rows) {
+    for (const key of Object.keys(row)) {
+      headerSet.add(key);
+    }
+  }
+  const headers = Array.from(headerSet);
+
+  const escape = (value: string | number | undefined | null) => {
+    if (value === undefined || value === null) return '""';
+    return `"${String(value).replace(/"/g, '""')}"`;
+  };
+
+  return [
+    headers.join(","),
+    ...rows.map((row) => headers.map((header) => escape(row[header])).join(",")),
+  ].join("\n");
 }
 
 function inRange(dateValue: string | null, start: string, end: string) {
@@ -66,8 +88,13 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
   const [formato, setFormato] = useState<FormatType>("pantalla");
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
-  const [generado, setGenerado] = useState(false);
   const [fechaGeneracion, setFechaGeneracion] = useState(generadoEn);
+  // Renderizado solo en cliente para evitar hydration mismatch con Intl.DateTimeFormat
+  const [fechaDisplay, setFechaDisplay] = useState("");
+
+  useEffect(() => {
+    setFechaDisplay(formatDateTime(fechaGeneracion));
+  }, [fechaGeneracion]);
 
   const filtrado = useMemo(() => {
     return {
@@ -82,7 +109,7 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
     };
   }, [data, fechaFin, fechaInicio]);
 
-  const rows = useMemo(() => {
+  const rows = useMemo((): Record<string, string | number>[] => {
     switch (tipoReporte) {
       case "usuarios":
         return filtrado.usuarios.map((item) => ({
@@ -93,45 +120,53 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
           Plan: item.plan,
           Registro: item.fecha_registro.slice(0, 10),
         }));
-      case "suscripciones-pagos":
-        return [
-          ...filtrado.suscripciones.map((item) => ({
-            Tipo: "Suscripción",
-            Usuario: item.usuario,
-            Plan: item.plan,
-            Estado: item.estado_suscripcion,
-            Fecha: item.fecha_inicio.slice(0, 10),
-          })),
-          ...filtrado.pagos.map((item) => ({
-            Tipo: "Pago",
-            Usuario: item.usuario,
-            Plan: item.plan,
-            Estado: item.estado_pago,
-            Monto: money(item.monto),
-            Método: item.metodo_pago,
-            Fecha: item.fecha_pago.slice(0, 10),
-          })),
-        ];
-      case "academico":
-        return [
-          ...filtrado.tareas.map((item) => ({
-            Tipo: "Tarea",
-            Titulo: item.titulo,
-            Estado: item.estado_tarea,
-            Prioridad: item.prioridad,
-            Usuario: item.usuario,
-            Curso: item.curso,
-          })),
-          ...filtrado.proyectos.map((item) => ({
-            Tipo: "Proyecto",
-            Titulo: item.nombre_proyecto,
-            Estado: item.estado_proyecto,
-            Usuario: item.creador,
-            Curso: item.curso,
-            Integrantes: item.integrantes,
-            Tareas: item.tareas,
-          })),
-        ];
+      case "suscripciones-pagos": {
+        // Use a unified schema so every row has the same columns.
+        // Fields that don't apply to a given row type get a dash placeholder.
+        const suscripcionRows = filtrado.suscripciones.map((item) => ({
+          Tipo: "Suscripcion",
+          Usuario: item.usuario,
+          Plan: item.plan,
+          Estado: item.estado_suscripcion,
+          Monto: "—",
+          Metodo: "—",
+          Fecha: item.fecha_inicio.slice(0, 10),
+        }));
+        const pagoRows = filtrado.pagos.map((item) => ({
+          Tipo: "Pago",
+          Usuario: item.usuario,
+          Plan: item.plan,
+          Estado: item.estado_pago,
+          Monto: money(item.monto),
+          Metodo: item.metodo_pago,
+          Fecha: item.fecha_pago.slice(0, 10),
+        }));
+        return [...suscripcionRows, ...pagoRows];
+      }
+      case "academico": {
+        // Use a unified schema for tareas + proyectos
+        const tareaRows = filtrado.tareas.map((item) => ({
+          Tipo: "Tarea",
+          Titulo: item.titulo,
+          Estado: item.estado_tarea,
+          Prioridad: item.prioridad,
+          Usuario: item.usuario,
+          Curso: item.curso,
+          Integrantes: "—",
+          "Total Tareas": "—",
+        }));
+        const proyectoRows = filtrado.proyectos.map((item) => ({
+          Tipo: "Proyecto",
+          Titulo: item.nombre_proyecto,
+          Estado: item.estado_proyecto,
+          Prioridad: "—",
+          Usuario: item.creador,
+          Curso: item.curso,
+          Integrantes: item.integrantes,
+          "Total Tareas": item.tareas,
+        }));
+        return [...tareaRows, ...proyectoRows];
+      }
       case "soporte":
         return filtrado.soporte.map((item) => ({
           Asunto: item.asunto,
@@ -142,15 +177,27 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
       case "ejecutivo":
       default:
         return [
-          { Métrica: "Usuarios registrados", Valor: data.resumen.totalUsuarios },
-          { Métrica: "Usuarios Premium", Valor: data.resumen.usuariosPremium },
-          { Métrica: "Ingresos estimados", Valor: money(data.resumen.ingresosEstimados) },
-          { Métrica: "Tareas creadas", Valor: data.resumen.totalTareas },
-          { Métrica: "Proyectos activos", Valor: data.resumen.totalProyectos },
-          { Métrica: "Consultas pendientes", Valor: data.resumen.consultasPendientes },
+          { Metrica: "Usuarios registrados", Valor: data.resumen.totalUsuarios },
+          { Metrica: "Usuarios Premium", Valor: data.resumen.usuariosPremium },
+          { Metrica: "Ingresos estimados", Valor: money(data.resumen.ingresosEstimados) },
+          { Metrica: "Tareas creadas", Valor: data.resumen.totalTareas },
+          { Metrica: "Proyectos activos", Valor: data.resumen.totalProyectos },
+          { Metrica: "Consultas pendientes", Valor: data.resumen.consultasPendientes },
         ];
     }
   }, [data.resumen, filtrado, tipoReporte]);
+
+  // Derive consistent headers from ALL rows (handles mixed-column datasets)
+  const headers = useMemo(() => {
+    if (rows.length === 0) return [];
+    const headerSet = new Set<string>();
+    for (const row of rows) {
+      for (const key of Object.keys(row)) {
+        headerSet.add(key);
+      }
+    }
+    return Array.from(headerSet);
+  }, [rows]);
 
   const metrics = useMemo(() => {
     if (tipoReporte === "usuarios") {
@@ -197,24 +244,35 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
     ];
   }, [data.resumen, filtrado, tipoReporte]);
 
-  const generarReporte = () => {
-    setGenerado(true);
-    setFechaGeneracion(new Date().toISOString());
-  };
-
+  /** Trigger the CSV download */
   const descargarCsv = () => {
     const csv = createCsv(rows);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
     link.download = `${tipoReporte}-taskuni.csv`;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
 
+  /** Trigger browser print dialog (for PDF) */
   const imprimir = () => {
     window.print();
+  };
+
+  /** Main "Generar reporte" button: dispatches action based on selected format */
+  const generarReporte = () => {
+    setFechaGeneracion(new Date().toISOString());
+    if (formato === "csv") {
+      // Small delay to let state update before downloading
+      setTimeout(() => descargarCsv(), 100);
+    } else if (formato === "pdf") {
+      setTimeout(() => imprimir(), 100);
+    }
+    // "pantalla" just refreshes the preview (already done by setFechaGeneracion)
   };
 
   const limpiar = () => {
@@ -222,27 +280,23 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
     setFormato("pantalla");
     setFechaInicio("");
     setFechaFin("");
-    setGenerado(false);
+  };
+
+  const toneClass = (tone: string) => {
+    if (tone === "brand") return "flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-100";
+    if (tone === "green") return "flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-100";
+    if (tone === "amber") return "flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-100";
+    if (tone === "red") return "flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-100";
+    return "flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-100";
   };
 
   return (
     <div className="space-y-6">
+      {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {metrics.map((metric) => (
           <div key={metric.label} className="card flex items-center gap-4">
-            <div
-              className={
-                metric.tone === "brand"
-                  ? "flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-100"
-                  : metric.tone === "green"
-                    ? "flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-100"
-                    : metric.tone === "amber"
-                      ? "flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-100"
-                      : metric.tone === "red"
-                        ? "flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-100"
-                        : "flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-100"
-              }
-            >
+            <div className={toneClass(metric.tone)}>
               <metric.icon size={22} />
             </div>
             <div>
@@ -255,9 +309,10 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr] print:block">
         <div className="space-y-6">
-          <div className="card space-y-4 print:shadow-none">
+          {/* Filters */}
+          <div className="card space-y-4 print:hidden">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Generación de reportes</h2>
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Generacion de reportes</h2>
               <p className="text-sm text-slate-500 dark:text-slate-400">Selecciona el tipo de reporte, el rango de fechas y el formato de salida.</p>
             </div>
 
@@ -286,7 +341,7 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
                 <select className="input" value={formato} onChange={(e) => setFormato(e.target.value as FormatType)}>
                   <option value="pantalla">Vista previa</option>
                   <option value="csv">CSV</option>
-                  <option value="pdf">PDF / impresión</option>
+                  <option value="pdf">PDF / impresion</option>
                 </select>
               </div>
               <div className="flex items-end gap-3">
@@ -299,13 +354,14 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
             </div>
           </div>
 
-          <div className="card space-y-4 print:shadow-none">
+          {/* Preview */}
+          <div id="reporte-printable" className="card space-y-4 print:shadow-none">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Vista previa</h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400">{labels[tipoReporte]}</p>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 print:hidden">
                 <button type="button" onClick={descargarCsv} className="btn-secondary">
                   <Download size={16} className="mr-2" />
                   Exportar CSV
@@ -318,64 +374,73 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
             </div>
 
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/5">
+              {/* Report Header */}
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{labels[tipoReporte]}</p>
                   <p className="text-lg font-semibold text-slate-900 dark:text-white">Generado por {data.generadoPor}</p>
                 </div>
                 <div className="text-sm text-slate-500 dark:text-slate-400">
-                  <p>Fecha: {formatDateTime(fechaGeneracion)}</p>
+                  <p suppressHydrationWarning>Fecha: {fechaDisplay}</p>
                   <p>Formato: {formato.toUpperCase()}</p>
                 </div>
               </div>
 
-              {generado ? (
-                <>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    <div className="rounded-2xl bg-white p-3 dark:bg-slate-900">
-                      <p className="text-xs text-slate-400">Registros</p>
-                      <p className="text-2xl font-semibold text-slate-900 dark:text-white">{rows.length}</p>
-                    </div>
-                    <div className="rounded-2xl bg-white p-3 dark:bg-slate-900">
-                      <p className="text-xs text-slate-400">Rango</p>
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{fechaInicio || "Inicio"} - {fechaFin || "Hoy"}</p>
-                    </div>
-                    <div className="rounded-2xl bg-white p-3 dark:bg-slate-900">
-                      <p className="text-xs text-slate-400">Categoría</p>
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{labels[tipoReporte]}</p>
-                    </div>
-                  </div>
+              {/* Stats row */}
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="rounded-2xl bg-white p-3 dark:bg-slate-900">
+                  <p className="text-xs text-slate-400">Registros</p>
+                  <p className="text-2xl font-semibold text-slate-900 dark:text-white">{rows.length}</p>
+                </div>
+                <div className="rounded-2xl bg-white p-3 dark:bg-slate-900">
+                  <p className="text-xs text-slate-400">Rango</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{fechaInicio || "Inicio"} — {fechaFin || "Hoy"}</p>
+                </div>
+                <div className="rounded-2xl bg-white p-3 dark:bg-slate-900">
+                  <p className="text-xs text-slate-400">Categoria</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{labels[tipoReporte]}</p>
+                </div>
+              </div>
 
-                  <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10">
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-white dark:bg-slate-900">
-                        <tr className="border-b border-slate-200 text-slate-500 dark:border-white/10 dark:text-slate-400">
-                          {rows[0] && Object.keys(rows[0]).map((header) => (
-                            <th key={header} className="px-4 py-3 font-medium">{header}</th>
+              {/* Table */}
+              {rows.length === 0 ? (
+                <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-400 dark:border-white/10 dark:bg-slate-950">
+                  No hay registros para el rango de fechas seleccionado.
+                </div>
+              ) : (
+                <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 dark:border-white/10">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-white dark:bg-slate-900">
+                      <tr className="border-b border-slate-200 text-slate-500 dark:border-white/10 dark:text-slate-400">
+                        {headers.map((header) => (
+                          <th key={header} className="px-4 py-3 font-medium whitespace-nowrap">{header}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-slate-950">
+                      {rows.slice(0, 15).map((row, index) => (
+                        <tr key={index} className="border-b border-slate-100 last:border-0 dark:border-white/5">
+                          {headers.map((header, colIndex) => (
+                            <td key={`${index}-${colIndex}`} className="px-4 py-3 text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                              {String(row[header] ?? "—")}
+                            </td>
                           ))}
                         </tr>
-                      </thead>
-                      <tbody className="bg-white dark:bg-slate-950">
-                        {rows.slice(0, 12).map((row, index) => (
-                          <tr key={index} className="border-b border-slate-100 last:border-0 dark:border-white/5">
-                            {Object.values(row).map((value, rowIndex) => (
-                              <td key={`${index}-${rowIndex}`} className="px-4 py-3 text-slate-700 dark:text-slate-200">{String(value)}</td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
-              ) : (
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500 dark:border-white/10 dark:bg-slate-950 dark:text-slate-400">
-                  Selecciona parámetros y presiona “Generar reporte” para ver la vista previa.
+                      ))}
+                    </tbody>
+                  </table>
+                  {rows.length > 15 && (
+                    <p className="border-t border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-400 dark:border-white/10 dark:bg-slate-900">
+                      Mostrando 15 de {rows.length} registros — exporta en CSV para ver todos.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
           </div>
         </div>
 
+        {/* Sidebar */}
         <aside className="space-y-6">
           <div className="card print:shadow-none">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Resumen ejecutivo</h3>
@@ -390,13 +455,13 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
           </div>
 
           <div className="card print:shadow-none">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Guía rápida</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Guia rapida</h3>
             <div className="mt-3 space-y-2 text-sm text-slate-500 dark:text-slate-400">
-              <p>• Usuarios: crecimiento y segmentación por rol o plan.</p>
+              <p>• Usuarios: crecimiento y segmentacion por rol o plan.</p>
               <p>• Suscripciones y pagos: seguimiento comercial del SaaS.</p>
-              <p>• Académico: tareas, proyectos y cursos activos.</p>
-              <p>• Soporte: volumen y estado de atención al usuario.</p>
-              <p>• Ejecutivo: lectura rápida para dirección.</p>
+              <p>• Academico: tareas, proyectos y cursos activos.</p>
+              <p>• Soporte: volumen y estado de atencion al usuario.</p>
+              <p>• Ejecutivo: lectura rapida para direccion.</p>
             </div>
           </div>
         </aside>
@@ -404,18 +469,22 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
 
       <style jsx global>{`
         @media print {
+          /* Hide everything outside the printable report */
           body * {
             visibility: hidden;
           }
-          .print\\:shadow-none,
-          .print\\:shadow-none * {
+          #reporte-printable,
+          #reporte-printable * {
             visibility: visible;
           }
-          .print\\:shadow-none {
+          #reporte-printable {
             position: absolute;
             left: 0;
             top: 0;
             width: 100%;
+          }
+          .print\\:hidden {
+            display: none !important;
           }
         }
       `}</style>

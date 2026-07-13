@@ -69,8 +69,8 @@ function ArchivosContenido() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const cursoIdFiltro = searchParams.get("curso");
-  const proyectoIdFiltro = searchParams.get("proyecto");
+  const cursoIdFiltro = searchParams?.get("curso") ?? null;
+  const proyectoIdFiltro = searchParams?.get("proyecto") ?? null;
 
   const [cursos, setCursos] = useState<Curso[]>([]);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);

@@ -23,7 +23,7 @@ export default function TareasPage() {
 function TareasContenido() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const cursoIdFiltro = searchParams.get("curso");
+  const cursoIdFiltro = searchParams?.get("curso") ?? null;
   const [tareas, setTareas] = useState<TareaVista[]>([]);
   const [cursos, setCursos] = useState<Curso[]>([]);
   const [cargando, setCargando] = useState(true);

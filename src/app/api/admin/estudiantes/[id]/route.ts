@@ -81,12 +81,6 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
     return NextResponse.json({ error: "Estudiante no encontrado" }, { status: 404 });
   }
 
-  // TareaProyecto.id_usuario_asignado no tiene cascada: se libera antes de borrar.
-  await prisma.tareaProyecto.updateMany({
-    where: { id_usuario_asignado: params.id },
-    data: { id_usuario_asignado: null },
-  });
-
   await prisma.usuario.delete({ where: { id_usuario: params.id } });
 
   return NextResponse.json({ message: "Estudiante eliminado" });

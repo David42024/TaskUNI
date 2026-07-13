@@ -53,7 +53,7 @@ export default function ProyectosPage() {
 function ProyectosContenido() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const cursoIdFiltro = searchParams.get("curso");
+  const cursoIdFiltro = searchParams?.get("curso") ?? null;
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [cargando, setCargando] = useState(true);
   const [modalProyectoAbierto, setModalProyectoAbierto] = useState(false);
