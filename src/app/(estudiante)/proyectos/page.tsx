@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, X, UserPlus, Trash2 } from "lucide-react";
 import clsx from "clsx";
 import FormularioProyecto, { DatosProyecto } from "@/components/FormularioProyecto";
@@ -24,6 +25,7 @@ interface Integrante {
 
 interface Proyecto {
   id_proyecto: string;
+  id_curso: string | null;
   nombre_proyecto: string;
   descripcion: string | null;
   fecha_entrega: string | null;
@@ -41,6 +43,17 @@ const columnas = [
 ];
 
 export default function ProyectosPage() {
+  return (
+    <Suspense fallback={<div className="card text-center text-slate-400">Cargando proyectos...</div>}>
+      <ProyectosContenido />
+    </Suspense>
+  );
+}
+
+function ProyectosContenido() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const cursoIdFiltro = searchParams.get("curso");
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [cargando, setCargando] = useState(true);
   const [modalProyectoAbierto, setModalProyectoAbierto] = useState(false);
@@ -252,6 +265,10 @@ export default function ProyectosPage() {
     );
   }
 
+  const proyectosVisibles = cursoIdFiltro
+    ? proyectos.filter((p) => p.id_curso === cursoIdFiltro)
+    : proyectos;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -264,13 +281,22 @@ export default function ProyectosPage() {
         </button>
       </div>
 
+      {cursoIdFiltro && (
+        <div className="card flex items-center justify-between gap-3 bg-brand-50 text-sm text-brand-700">
+          <span>Mostrando proyectos de este curso</span>
+          <button className="btn-secondary text-xs" onClick={() => router.push("/proyectos")}>
+            Ver todos
+          </button>
+        </div>
+      )}
+
       {cargando ? (
         <div className="card text-center text-slate-400">Cargando proyectos...</div>
-      ) : proyectos.length === 0 ? (
+      ) : proyectosVisibles.length === 0 ? (
         <div className="card text-center text-slate-400">Aún no tienes proyectos grupales.</div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {proyectos.map((p) => (
+          {proyectosVisibles.map((p) => (
             <div key={p.id_proyecto} className="card cursor-pointer hover:shadow-md" onClick={() => setProyectoSeleccionado(p)}>
               <div className="flex items-start justify-between">
                 <h3 className="font-semibold text-slate-900">{p.nombre_proyecto}</h3>

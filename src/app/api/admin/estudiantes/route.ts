@@ -8,26 +8,21 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  const usuarios = await prisma.usuario.findMany({
+  const estudiantes = await prisma.usuario.findMany({
+    where: { rol: "estudiante" },
     select: {
       id_usuario: true,
       nombres: true,
       apellidos: true,
       correo: true,
-      rol: true,
       estado: true,
       fecha_registro: true,
       perfil_estudiante: true,
-      suscripciones: {
-        where: { estado_suscripcion: "activa" },
-        include: { plan: true },
-        take: 1,
-        orderBy: { fecha_inicio: "desc" },
-      },
+      suscripciones: { include: { plan: true }, take: 1, orderBy: { fecha_inicio: "desc" } },
       _count: { select: { tareas: true, proyectos_creados: true } },
     },
     orderBy: { fecha_registro: "desc" },
   });
 
-  return NextResponse.json(usuarios);
+  return NextResponse.json(estudiantes);
 }

@@ -112,6 +112,7 @@ model Usuario {
   consultas_soporte   ConsultaSoporte[]
   reportes            ReporteProductividad[]
   pagos               Pago[]
+  archivos            Archivo[]
 
   @@map("usuario")
 }
@@ -169,6 +170,7 @@ model Curso {
   usuario   Usuario     @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
   tareas    Tarea[]
   proyectos Proyecto[]
+  archivos  Archivo[]
 
   @@index([id_usuario])
   @@map("curso")
@@ -212,6 +214,7 @@ model Proyecto {
   integrantes   IntegranteProyecto[]
   tareas        TareaProyecto[]
   recordatorios Recordatorio[]
+  archivos      Archivo[]
 
   @@index([id_usuario_creador])
   @@map("proyecto")
@@ -334,4 +337,25 @@ model Pago {
 
   @@index([id_usuario])
   @@map("pago")
+}
+
+model Archivo {
+  id_archivo      String   @id @default(cuid())
+  id_usuario      String
+  id_curso        String?
+  id_proyecto     String?
+  nombre_original String
+  nombre_archivo  String
+  tipo_mime       String
+  tamano_bytes    Int
+  fecha_subida    DateTime @default(now())
+
+  usuario  Usuario   @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+  curso    Curso?    @relation(fields: [id_curso], references: [id_curso], onDelete: SetNull)
+  proyecto Proyecto? @relation(fields: [id_proyecto], references: [id_proyecto], onDelete: SetNull)
+
+  @@index([id_usuario])
+  @@index([id_curso])
+  @@index([id_proyecto])
+  @@map("archivo")
 }

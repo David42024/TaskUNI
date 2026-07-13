@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, X } from "lucide-react";
 import TablaTareas, { TareaVista } from "@/components/TablaTareas";
 import FormularioTarea, { DatosTarea } from "@/components/FormularioTarea";
@@ -12,6 +13,17 @@ interface Curso {
 }
 
 export default function TareasPage() {
+  return (
+    <Suspense fallback={<div className="card text-center text-slate-400">Cargando tareas...</div>}>
+      <TareasContenido />
+    </Suspense>
+  );
+}
+
+function TareasContenido() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const cursoIdFiltro = searchParams.get("curso");
   const [tareas, setTareas] = useState<TareaVista[]>([]);
   const [cursos, setCursos] = useState<Curso[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -72,6 +84,9 @@ export default function TareasPage() {
     }
   }
 
+  const tareasVisibles = cursoIdFiltro ? tareas.filter((t) => t.id_curso === cursoIdFiltro) : tareas;
+  const cursoFiltro = cursoIdFiltro ? cursos.find((c) => c.id_curso === cursoIdFiltro) : null;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -95,6 +110,17 @@ export default function TareasPage() {
         </div>
       </div>
 
+      {cursoIdFiltro && (
+        <div className="card flex items-center justify-between gap-3 bg-brand-50 text-sm text-brand-700">
+          <span>
+            Mostrando tareas de <strong>{cursoFiltro?.nombre_curso ?? "este curso"}</strong>
+          </span>
+          <button className="btn-secondary text-xs" onClick={() => router.push("/tareas")}>
+            Ver todas
+          </button>
+        </div>
+      )}
+
       {mostrarNuevoCurso && (
         <div className="card flex items-center gap-3">
           <input
@@ -116,7 +142,7 @@ export default function TareasPage() {
         <div className="card text-center text-slate-400">Cargando tareas...</div>
       ) : (
         <TablaTareas
-          tareas={tareas}
+          tareas={tareasVisibles}
           onEditar={(t) => {
             setTareaEditando(t);
             setModalAbierto(true);
