@@ -30,7 +30,11 @@ export default function Navbar() {
               >
                 Mi panel
               </Link>
-              <button onClick={() => signOut({ callbackUrl: "/" })} className="btn-primary">
+              <button onClick={() => {
+                signOut({ redirect: false }).then(() => {
+                  window.location.href = "/";
+                });
+              }} className="btn-primary">
                 Cerrar sesión
               </button>
             </>

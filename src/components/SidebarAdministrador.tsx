@@ -178,7 +178,11 @@ function SidebarContent({
       <div className="border-t border-slate-200 p-3 dark:border-white/10">
         <button
           type="button"
-          onClick={() => signOut({ callbackUrl: "/" })}
+          onClick={() => {
+            signOut({ redirect: false }).then(() => {
+              window.location.href = "/";
+            });
+          }}
           className="flex w-full items-center justify-between rounded-2xl px-3 py-3 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-500/10"
         >
           <span className="flex items-center gap-3">

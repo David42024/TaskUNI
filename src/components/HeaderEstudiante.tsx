@@ -276,7 +276,11 @@ export default function HeaderEstudiante({
               </Link>
               <button
                 type="button"
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={() => {
+                  signOut({ redirect: false }).then(() => {
+                    window.location.href = "/";
+                  });
+                }}
                 className="flex items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-medium text-red-600 transition hover:bg-red-50"
               >
                 <ChevronDown size={16} className="rotate-90" />
