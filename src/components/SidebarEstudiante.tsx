@@ -63,25 +63,10 @@ function SidebarContent({
   };
 
   const isDark = true;
+  const isPremium = planActual?.toLowerCase().includes("premium");
 
   return (
-    <div className="flex h-full flex-col bg-white text-slate-800 shadow-[0_20px_50px_rgba(15,23,42,0.08)] dark:bg-slate-950 dark:text-slate-100">
-      <div className="border-b border-slate-200 px-5 py-5 dark:border-white/10">
-        <Link href="/dashboard" className="flex items-center gap-3" onClick={onClose}>
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-violet-600 text-white shadow-lg shadow-brand-500/20">
-            <Sparkles size={20} />
-          </span>
-          <div>
-            <p className="text-base font-extrabold text-slate-900 dark:text-white">TaskUni</p>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Panel del estudiante</p>
-          </div>
-        </Link>
-
-        <div className="mt-4 rounded-2xl border border-brand-100 bg-brand-50 px-4 py-3 dark:border-brand-400/20 dark:bg-brand-500/10">
-          <p className="text-sm font-semibold text-brand-800 dark:text-brand-100">{nombre}</p>
-          <p className="text-xs text-brand-700/80 dark:text-brand-200/80">Plan actual: {planActual}</p>
-        </div>
-      </div>
+    <div className="flex h-full flex-col bg-white text-slate-800 shadow-[0_20px_50px_rgba(15,23,42,0.08)] dark:bg-slate-950 dark:text-slate-100 pt-4">
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <div className="space-y-1">
@@ -151,41 +136,23 @@ function SidebarContent({
             </span>
           </Link>
 
-          <Link
-            href="/configuracion"
-            onClick={onClose}
-            className={clsx(
-              "flex items-center justify-between rounded-2xl px-3 py-3 text-sm transition",
-              pathname === "/configuracion"
-                ? "bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-200"
-                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white"
-            )}
-          >
-            <span className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-300">
-                <Settings size={17} />
-              </span>
-              <span>
-                <span className="block font-medium">Configuración</span>
-                <span className="block text-xs text-slate-500 dark:text-slate-400">Perfil, preferencias y cuenta</span>
-              </span>
-            </span>
-          </Link>
         </div>
 
-        <div className="mt-5 rounded-3xl bg-gradient-to-br from-brand-600 to-violet-600 p-4 text-white shadow-lg shadow-brand-500/20">
-          <p className="text-sm font-semibold">Mejora tu organización</p>
-          <p className="mt-1 text-xs text-brand-50/90">
-            Desbloquea reportes, recordatorios inteligentes y proyectos avanzados.
-          </p>
-          <Link
-            href="/planes"
-            onClick={onClose}
-            className="mt-4 inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
-          >
-            Actualizar a Premium
-          </Link>
-        </div>
+        {!isPremium && (
+          <div className="mt-5 rounded-3xl bg-gradient-to-br from-brand-600 to-violet-600 p-4 text-white shadow-lg shadow-brand-500/20">
+            <p className="text-sm font-semibold">Mejora tu organización</p>
+            <p className="mt-1 text-xs text-brand-50/90">
+              Desbloquea reportes, recordatorios inteligentes y proyectos avanzados.
+            </p>
+            <Link
+              href="/planes"
+              onClick={onClose}
+              className="mt-4 inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
+            >
+              Actualizar a Premium
+            </Link>
+          </div>
+        )}
       </nav>
 
       <div className="border-t border-slate-200 p-3 dark:border-white/10">

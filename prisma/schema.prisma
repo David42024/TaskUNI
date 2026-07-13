@@ -50,6 +50,7 @@ enum EstadoProyecto {
   en_progreso
   completado
   atrasado
+  pausado
 }
 
 enum EstadoIntegrante {
@@ -270,33 +271,37 @@ model Recordatorio {
   id_usuario         String
   id_tarea           String?
   id_proyecto        String?
+  id_evento          String?
   titulo             String
   descripcion        String?
   fecha_recordatorio DateTime
   tipo_recordatorio  TipoRecordatorio   @default(basico)
   estado             EstadoRecordatorio @default(pendiente)
 
-  usuario  Usuario   @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
-  tarea    Tarea?    @relation(fields: [id_tarea], references: [id_tarea], onDelete: Cascade)
-  proyecto Proyecto? @relation(fields: [id_proyecto], references: [id_proyecto], onDelete: Cascade)
+  usuario  Usuario           @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+  tarea    Tarea?            @relation(fields: [id_tarea], references: [id_tarea], onDelete: Cascade)
+  proyecto Proyecto?         @relation(fields: [id_proyecto], references: [id_proyecto], onDelete: Cascade)
+  evento   EventoCalendario? @relation(fields: [id_evento], references: [id_evento], onDelete: Cascade)
 
   @@index([id_usuario])
   @@index([id_tarea])
   @@index([id_proyecto])
+  @@index([id_evento])
   @@index([fecha_recordatorio])
   @@map("recordatorio")
 }
 
 model EventoCalendario {
-  id_evento    String     @id @default(cuid())
-  id_usuario   String
-  titulo       String
-  descripcion  String?
-  tipo_evento  TipoEvento @default(otro)
-  fecha_inicio DateTime
-  fecha_fin    DateTime?
-  ubicacion    String?
-  estado       String     @default("programado")
+  id_evento     String         @id @default(cuid())
+  id_usuario    String
+  titulo        String
+  descripcion   String?
+  tipo_evento   TipoEvento     @default(otro)
+  fecha_inicio  DateTime
+  fecha_fin     DateTime?
+  ubicacion     String?
+  estado        String         @default("programado")
+  recordatorios Recordatorio[]
 
   usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
 

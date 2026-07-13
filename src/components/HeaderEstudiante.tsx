@@ -140,10 +140,10 @@ export default function HeaderEstudiante({
                 <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-violet-600 text-sm font-semibold text-white">
                   {obtenerIniciales(nombre)}
                 </span>
-                <span className="hidden min-w-0 lg:block">
-                  <span className="block truncate text-sm font-semibold text-slate-900">{nombre}</span>
-                  <span className="block truncate text-xs text-slate-500">
-                    {carrera} · {ciclo}
+                <span className="hidden min-w-0 lg:block text-left">
+                  <span className="block truncate text-sm font-semibold text-slate-900 dark:text-white">{nombre}</span>
+                  <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+                    {planActual}
                   </span>
                 </span>
                 <ChevronDown size={16} className="hidden text-slate-400 dark:text-slate-300 xl:block" />
@@ -252,7 +252,7 @@ export default function HeaderEstudiante({
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{nombre}</p>
                 <p className="truncate text-xs text-slate-500 dark:text-slate-400">
-                  {carrera} · {ciclo}
+                  {planActual}
                 </p>
               </div>
             </div>
