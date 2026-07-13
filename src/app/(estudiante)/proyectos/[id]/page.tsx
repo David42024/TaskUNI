@@ -6,11 +6,12 @@ import { BadgeCheck, CalendarDays, Users } from "lucide-react";
 
 const columnas = ["pendiente", "en_progreso", "completada", "vencida"] as const;
 
-export default async function DetalleProyectoPage({ params }: { params: { id: string } }) {
+export default async function DetalleProyectoPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const user = await requireUsuario();
   const proyecto = await prisma.proyecto.findFirst({
     where: {
-      id_proyecto: params.id,
+      id_proyecto: id,
       OR: [{ id_usuario_creador: user.id }, { integrantes: { some: { id_usuario: user.id } } }],
     },
     include: {

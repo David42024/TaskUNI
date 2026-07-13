@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSesionActual } from "@/lib/session";
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSesionActual();
   if (!session?.user) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
-  const proyecto = await prisma.proyecto.findUnique({ where: { id_proyecto: params.id } });
+  const proyecto = await prisma.proyecto.findUnique({ where: { id_proyecto: id } });
   if (!proyecto || proyecto.id_usuario_creador !== session.user.id) {
     return NextResponse.json(
       { error: "Solo el creador del proyecto puede invitar integrantes" },
@@ -28,7 +29,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
   }
 
   const existente = await prisma.integranteProyecto.findUnique({
-    where: { id_proyecto_id_usuario: { id_proyecto: params.id, id_usuario: usuario.id_usuario } },
+    where: { id_proyecto_id_usuario: { id_proyecto: id, id_usuario: usuario.id_usuario } },
   }).catch(() => null);
 
   if (existente) {
@@ -37,7 +38,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
   const integrante = await prisma.integranteProyecto.create({
     data: {
-      id_proyecto: params.id,
+      id_proyecto: id,
       id_usuario: usuario.id_usuario,
       responsabilidad: body.responsabilidad || null,
       estado: "invitado",

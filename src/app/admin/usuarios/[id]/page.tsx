@@ -3,9 +3,10 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatMoney } from "@/lib/taskuni-data";
 
-export default async function AdminUsuarioDetallePage({ params }: { params: { id: string } }) {
+export default async function AdminUsuarioDetallePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const usuario = await prisma.usuario.findUnique({
-    where: { id_usuario: params.id },
+    where: { id_usuario: id },
     include: {
       perfil_estudiante: true,
       suscripciones: { include: { plan: true }, orderBy: { fecha_inicio: "desc" } },

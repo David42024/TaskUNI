@@ -6,13 +6,14 @@ async function requireEstudiante(id_usuario: string) {
   return prisma.usuario.findFirst({ where: { id_usuario, rol: "estudiante" } });
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSesionActual();
   if (!session?.user || session.user.rol !== "administrador") {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  const existente = await requireEstudiante(params.id);
+  const existente = await requireEstudiante(id);
   if (!existente) {
     return NextResponse.json({ error: "Estudiante no encontrado" }, { status: 404 });
   }
@@ -21,7 +22,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const body = await request.json();
 
     const usuario = await prisma.usuario.update({
-      where: { id_usuario: params.id },
+      where: { id_usuario: id },
       data: {
         ...(body.nombres !== undefined && { nombres: body.nombres }),
         ...(body.apellidos !== undefined && { apellidos: body.apellidos }),
@@ -31,7 +32,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     if (body.perfil) {
       await prisma.perfilEstudiante.upsert({
-        where: { id_usuario: params.id },
+        where: { id_usuario: id },
         update: {
           ...(body.perfil.universidad !== undefined && { universidad: body.perfil.universidad }),
           ...(body.perfil.carrera !== undefined && { carrera: body.perfil.carrera }),
@@ -39,7 +40,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
           ...(body.perfil.codigo_estudiante !== undefined && { codigo_estudiante: body.perfil.codigo_estudiante }),
         },
         create: {
-          id_usuario: params.id,
+          id_usuario: id,
           universidad: body.perfil.universidad ?? "",
           carrera: body.perfil.carrera ?? "",
           ciclo_academico: body.perfil.ciclo_academico ?? "",
@@ -49,7 +50,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     const actualizado = await prisma.usuario.findUnique({
-      where: { id_usuario: params.id },
+      where: { id_usuario: id },
       select: {
         id_usuario: true,
         nombres: true,
@@ -70,18 +71,19 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSesionActual();
   if (!session?.user || session.user.rol !== "administrador") {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  const existente = await requireEstudiante(params.id);
+  const existente = await requireEstudiante(id);
   if (!existente) {
     return NextResponse.json({ error: "Estudiante no encontrado" }, { status: 404 });
   }
 
-  await prisma.usuario.delete({ where: { id_usuario: params.id } });
+  await prisma.usuario.delete({ where: { id_usuario: id } });
 
   return NextResponse.json({ message: "Estudiante eliminado" });
 }

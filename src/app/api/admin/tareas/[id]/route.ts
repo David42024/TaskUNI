@@ -3,13 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { getSesionActual } from "@/lib/session";
 import { tareaSchema } from "@/lib/validations";
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSesionActual();
   if (!session?.user || session.user.rol !== "administrador") {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  const existente = await prisma.tarea.findUnique({ where: { id_tarea: params.id } });
+  const existente = await prisma.tarea.findUnique({ where: { id_tarea: id } });
   if (!existente) {
     return NextResponse.json({ error: "Tarea no encontrada" }, { status: 404 });
   }
@@ -19,7 +20,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const datos = tareaSchema.partial().parse(body);
 
     const tarea = await prisma.tarea.update({
-      where: { id_tarea: params.id },
+      where: { id_tarea: id },
       data: {
         ...(datos.titulo !== undefined && { titulo: datos.titulo }),
         ...(datos.descripcion !== undefined && { descripcion: datos.descripcion }),
@@ -45,17 +46,18 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSesionActual();
   if (!session?.user || session.user.rol !== "administrador") {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  const existente = await prisma.tarea.findUnique({ where: { id_tarea: params.id } });
+  const existente = await prisma.tarea.findUnique({ where: { id_tarea: id } });
   if (!existente) {
     return NextResponse.json({ error: "Tarea no encontrada" }, { status: 404 });
   }
 
-  await prisma.tarea.delete({ where: { id_tarea: params.id } });
+  await prisma.tarea.delete({ where: { id_tarea: id } });
   return NextResponse.json({ message: "Tarea eliminada" });
 }

@@ -11,10 +11,11 @@ const estadoColor: Record<string, string> = {
   vencida: "bg-red-100 text-red-700",
 };
 
-export default async function DetalleTareaPage({ params }: { params: { id: string } }) {
+export default async function DetalleTareaPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const user = await requireUsuario();
   const tarea = await prisma.tarea.findFirst({
-    where: { id_tarea: params.id, id_usuario: user.id },
+    where: { id_tarea: id, id_usuario: user.id },
     include: { curso: true, recordatorios: true },
   });
 

@@ -16,13 +16,14 @@ async function tieneAcceso(id_proyecto: string, id_usuario: string) {
   return proyecto;
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSesionActual();
   if (!session?.user) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
-  const proyecto = await tieneAcceso(params.id, session.user.id);
+  const proyecto = await tieneAcceso(id, session.user.id);
   if (!proyecto) {
     return NextResponse.json({ error: "Proyecto no encontrado" }, { status: 404 });
   }
@@ -32,7 +33,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const datos = proyectoSchema.partial().parse(body);
 
     const actualizado = await prisma.proyecto.update({
-      where: { id_proyecto: params.id },
+      where: { id_proyecto: id },
       data: {
         ...(datos.nombre_proyecto !== undefined && { nombre_proyecto: datos.nombre_proyecto }),
         ...(datos.descripcion !== undefined && { descripcion: datos.descripcion }),
@@ -53,13 +54,14 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSesionActual();
   if (!session?.user) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
-  const proyecto = await prisma.proyecto.findUnique({ where: { id_proyecto: params.id } });
+  const proyecto = await prisma.proyecto.findUnique({ where: { id_proyecto: id } });
   if (!proyecto || proyecto.id_usuario_creador !== session.user.id) {
     return NextResponse.json(
       { error: "Solo el creador del proyecto puede eliminarlo" },
@@ -67,6 +69,6 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
     );
   }
 
-  await prisma.proyecto.delete({ where: { id_proyecto: params.id } });
+  await prisma.proyecto.delete({ where: { id_proyecto: id } });
   return NextResponse.json({ message: "Proyecto eliminado" });
 }

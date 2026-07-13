@@ -16,13 +16,14 @@ async function obtenerArchivoAccesible(id_archivo: string, id_usuario: string) {
   return archivo;
 }
 
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSesionActual();
   if (!session?.user) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
-  const archivo = await obtenerArchivoAccesible(params.id, session.user.id);
+  const archivo = await obtenerArchivoAccesible(id, session.user.id);
   if (!archivo) {
     return NextResponse.json({ error: "Archivo no encontrado" }, { status: 404 });
   }
@@ -42,20 +43,21 @@ export async function GET(_request: Request, { params }: { params: { id: string 
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSesionActual();
   if (!session?.user) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
   const archivo = await prisma.archivo.findFirst({
-    where: { id_archivo: params.id, id_usuario: session.user.id },
+    where: { id_archivo: id, id_usuario: session.user.id },
   });
   if (!archivo) {
     return NextResponse.json({ error: "Archivo no encontrado" }, { status: 404 });
   }
 
-  await prisma.archivo.delete({ where: { id_archivo: params.id } });
+  await prisma.archivo.delete({ where: { id_archivo: id } });
   await eliminarArchivoDisco(archivo.nombre_archivo);
 
   return NextResponse.json({ message: "Archivo eliminado" });
