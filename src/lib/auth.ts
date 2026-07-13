@@ -72,23 +72,6 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-    async redirect({ url, baseUrl }) {
-      // Si la URL es相对路径, retornarla tal cual
-      if (url.startsWith("/")) {
-        return url;
-      }
-      // Si es una URL absoluta válida, extraer el path
-      if (url.startsWith("http://") || url.startsWith("https://")) {
-        try {
-          const urlObj = new URL(url);
-          return urlObj.pathname + urlObj.search;
-        } catch {
-          return "/";
-        }
-      }
-      // De lo contrario, retornar home
-      return "/";
-    },
   },
   secret: process.env.NEXTAUTH_SECRET,
   // Usar la URL del request dinámicamente en lugar de NEXTAUTH_URL hardcodeado
