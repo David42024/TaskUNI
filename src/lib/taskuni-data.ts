@@ -25,7 +25,7 @@ function relativeLabel(date: Date) {
 }
 
 export async function getStudentNotifications(userId: string): Promise<NotificationItem[]> {
-  const [tareas, recordatorios, eventos, proyectos, asignaciones] = await Promise.all([
+  const [tareas, recordatorios, eventos, proyectos, asignaciones, invitaciones] = await Promise.all([
     prisma.tarea.findMany({
       where: { id_usuario: userId },
       include: { curso: true },
@@ -57,9 +57,27 @@ export async function getStudentNotifications(userId: string): Promise<Notificat
       orderBy: { fecha_limite: "asc" },
       take: 6,
     }),
+    prisma.integranteProyecto.findMany({
+      where: { id_usuario: userId, estado: "invitado" },
+      include: { proyecto: { include: { creador: true } } },
+      orderBy: { id_integrante: "desc" },
+      take: 5,
+    }),
   ]);
 
   const items: NotificationItem[] = [];
+
+  invitaciones.forEach((invitacion) => {
+    items.push({
+      id: `invitacion-${invitacion.id_integrante}`,
+      titulo: `Invitación a proyecto: ${invitacion.proyecto.nombre_proyecto}`,
+      descripcion: `Invitado por ${invitacion.proyecto.creador.nombres} ${invitacion.proyecto.creador.apellidos}`,
+      fechaLabel: "Pendiente",
+      href: "/proyectos",
+      tipo: "Proyecto",
+      estado: "pendiente",
+    });
+  });
 
   tareas
     .filter((tarea) => tarea.estado_tarea !== "completada" && tarea.fecha_limite)

@@ -18,7 +18,7 @@ export async function GET() {
     },
     include: {
       integrantes: { include: { usuario: { select: { nombres: true, apellidos: true, correo: true } } } },
-      tareas: true,
+      tareas: { include: { asignado: { select: { id_usuario: true, nombres: true, apellidos: true, correo: true } } } },
       creador: { select: { nombres: true, apellidos: true } },
     },
     orderBy: { fecha_creacion: "desc" },

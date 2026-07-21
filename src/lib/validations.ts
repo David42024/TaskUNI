@@ -29,7 +29,7 @@ export const proyectoSchema = z.object({
   nombre_proyecto: z.string().min(2, "El nombre del proyecto es obligatorio"),
   descripcion: z.string().optional().nullable(),
   fecha_entrega: z.string().optional().nullable(),
-  estado_proyecto: z.enum(["planificacion", "en_progreso", "completado", "atrasado"]).default("planificacion"),
+  estado_proyecto: z.enum(["planificacion", "en_progreso", "completado", "atrasado", "pausado"]).default("planificacion"),
   avance_general: z.coerce.number().min(0).max(100).default(0),
 });
 

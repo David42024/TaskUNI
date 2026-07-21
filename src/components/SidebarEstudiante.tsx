@@ -186,26 +186,6 @@ function SidebarContent({
             </span>
           </Link>
 
-          <Link
-            href="/configuracion"
-            onClick={onClose}
-            className={clsx(
-              "flex items-center justify-between rounded-2xl px-3 py-3 text-sm transition",
-              pathname === "/configuracion"
-                ? "bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-200"
-                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white"
-            )}
-          >
-            <span className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-300">
-                <Settings size={17} />
-              </span>
-              <span>
-                <span className="block font-medium">Configuración</span>
-                <span className="block text-xs text-slate-500 dark:text-slate-400">Perfil, preferencias y cuenta</span>
-              </span>
-            </span>
-          </Link>
         </div>
 
         {esGratuito ? (

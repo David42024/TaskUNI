@@ -11,6 +11,7 @@ export interface EventoVista {
   tipo_evento: "entrega" | "reunion" | "examen" | "otro";
   fecha_inicio: string;
   ubicacion?: string | null;
+  isReadOnly?: boolean;
 }
 
 interface Props {
@@ -129,12 +130,14 @@ export default function CalendarioAcademico({ eventos, onEliminar }: Props) {
                         >
                           {ev.titulo}
                         </span>
-                        <button
-                          onClick={() => onEliminar(ev.id_evento)}
-                          className="hidden text-slate-400 hover:text-red-500 group-hover:block"
-                        >
-                          <Trash2 size={10} />
-                        </button>
+                        {!ev.isReadOnly && (
+                          <button
+                            onClick={() => onEliminar(ev.id_evento)}
+                            className="hidden text-slate-400 hover:text-red-500 group-hover:block"
+                          >
+                            <Trash2 size={10} />
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
