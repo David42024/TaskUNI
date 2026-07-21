@@ -105,23 +105,7 @@ function SidebarContent({
   };
 
   return (
-    <div className="flex h-full flex-col bg-white text-slate-800 shadow-[0_20px_50px_rgba(15,23,42,0.08)] dark:bg-slate-950 dark:text-slate-100 dark:shadow-[0_20px_50px_rgba(15,23,42,0.18)]">
-      <div className="border-b border-slate-200 px-5 py-5 dark:border-white/10">
-        <Link href="/admin" className="flex items-center gap-3" onClick={onClose}>
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/20">
-            <ShieldCheck size={20} />
-          </span>
-          <div>
-            <p className="text-base font-extrabold text-slate-900 dark:text-white">TaskUni Admin</p>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-300">Panel de administración</p>
-          </div>
-        </Link>
-
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-          <p className="text-sm font-semibold text-slate-900 dark:text-white">{nombre}</p>
-          <p className="text-xs text-slate-500 dark:text-slate-300">Administrador general</p>
-        </div>
-      </div>
+    <div className="flex h-full flex-col bg-white text-slate-800 shadow-[0_20px_50px_rgba(15,23,42,0.08)] dark:bg-slate-950 dark:text-slate-100 dark:shadow-[0_20px_50px_rgba(15,23,42,0.18)] pt-2">
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         {sections.map((section) => (
