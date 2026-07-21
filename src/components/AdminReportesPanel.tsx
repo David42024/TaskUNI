@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Download, Printer, RotateCcw, Users, Crown, DollarSign, ListChecks, FolderKanban, LifeBuoy, FileText } from "lucide-react";
+import CardResumen from "@/components/CardResumen";
 
 type ReportType = "usuarios" | "suscripciones-pagos" | "academico" | "soporte" | "ejecutivo";
 type FormatType = "pantalla" | "csv" | "pdf";
@@ -37,15 +38,12 @@ function money(value: number) {
 }
 
 /**
- * Builds a CSV string from an array of row objects.
- * Collects ALL unique keys across every row so that mixed-column datasets
- * (e.g. suscripciones + pagos combined) produce a complete header row
- * instead of silently dropping columns that only appear in later rows.
+ * Builds an HTML string to be exported as an .xls file.
+ * Excel parses HTML tables and respects basic CSS (background, color, borders, fonts).
  */
-function createCsv(rows: Record<string, string | number | undefined>[]) {
+function createExcelHtml(rows: Record<string, string | number | undefined>[], title: string, dateStr: string) {
   if (rows.length === 0) return "";
-
-  // Collect every unique key across ALL rows, preserving insertion order
+  
   const headerSet = new Set<string>();
   for (const row of rows) {
     for (const key of Object.keys(row)) {
@@ -54,15 +52,36 @@ function createCsv(rows: Record<string, string | number | undefined>[]) {
   }
   const headers = Array.from(headerSet);
 
-  const escape = (value: string | number | undefined | null) => {
-    if (value === undefined || value === null) return '""';
-    return `"${String(value).replace(/"/g, '""')}"`;
-  };
-
-  return [
-    headers.join(","),
-    ...rows.map((row) => headers.map((header) => escape(row[header])).join(",")),
-  ].join("\n");
+  return `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+      <meta charset="utf-8" />
+      <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; }
+        .title-row { font-size: 20px; font-weight: bold; color: #1e293b; text-align: left; }
+        .date-row { font-size: 12px; color: #64748b; text-align: left; }
+        .header-cell { background-color: #0f172a; color: #ffffff; font-weight: bold; padding: 12px; text-align: center; border: 1px solid #0f172a; }
+        .data-cell { padding: 10px; border: 1px solid #e2e8f0; font-size: 12px; color: #334155; vertical-align: middle; }
+        .alt-row { background-color: #f8fafc; }
+      </style>
+    </head>
+    <body>
+      <table>
+        <tr><td colspan="${headers.length}" class="title-row">${title}</td></tr>
+        <tr><td colspan="${headers.length}" class="date-row">Generado el: ${dateStr}</td></tr>
+        <tr><td colspan="${headers.length}"></td></tr>
+        <tr>
+          ${headers.map(h => `<td class="header-cell">${h}</td>`).join('')}
+        </tr>
+        ${rows.map((row, i) => `
+          <tr class="${i % 2 !== 0 ? 'alt-row' : ''}">
+            ${headers.map(h => `<td class="data-cell">${row[h] !== undefined && row[h] !== null ? row[h] : '—'}</td>`).join('')}
+          </tr>
+        `).join('')}
+      </table>
+    </body>
+    </html>
+  `;
 }
 
 function inRange(dateValue: string | null, start: string, end: string) {
@@ -244,14 +263,14 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
     ];
   }, [data.resumen, filtrado, tipoReporte]);
 
-  /** Trigger the CSV download */
-  const descargarCsv = () => {
-    const csv = createCsv(rows);
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  /** Trigger the Excel download */
+  const descargarExcel = () => {
+    const html = createExcelHtml(rows, labels[tipoReporte], fechaDisplay);
+    const blob = new Blob(["\uFEFF" + html], { type: "application/vnd.ms-excel;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${tipoReporte}-taskuni.csv`;
+    link.download = `${tipoReporte}-taskuni.xls`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -268,7 +287,7 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
     setFechaGeneracion(new Date().toISOString());
     if (formato === "csv") {
       // Small delay to let state update before downloading
-      setTimeout(() => descargarCsv(), 100);
+      setTimeout(() => descargarExcel(), 100);
     } else if (formato === "pdf") {
       setTimeout(() => imprimir(), 100);
     }
@@ -282,28 +301,18 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
     setFechaFin("");
   };
 
-  const toneClass = (tone: string) => {
-    if (tone === "brand") return "flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-100";
-    if (tone === "green") return "flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-100";
-    if (tone === "amber") return "flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-100";
-    if (tone === "red") return "flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-100";
-    return "flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-100";
-  };
-
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {metrics.map((metric) => (
-          <div key={metric.label} className="card flex items-center gap-4">
-            <div className={toneClass(metric.tone)}>
-              <metric.icon size={22} />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500 dark:text-slate-400">{metric.label}</p>
-              <p className="text-2xl font-semibold text-slate-900 dark:text-white">{metric.value}</p>
-            </div>
-          </div>
+          <CardResumen 
+            key={metric.label}
+            titulo={metric.label}
+            valor={metric.value}
+            icon={metric.icon}
+            color={metric.tone as any}
+          />
         ))}
       </div>
 
@@ -340,8 +349,8 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
                 <label className="label">Formato</label>
                 <select className="input" value={formato} onChange={(e) => setFormato(e.target.value as FormatType)}>
                   <option value="pantalla">Vista previa</option>
-                  <option value="csv">CSV</option>
-                  <option value="pdf">PDF / impresion</option>
+                  <option value="csv">Excel (con diseño)</option>
+                  <option value="pdf">PDF / Impresión</option>
                 </select>
               </div>
               <div className="flex items-end gap-3">
@@ -362,9 +371,9 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
                 <p className="text-sm text-slate-500 dark:text-slate-400">{labels[tipoReporte]}</p>
               </div>
               <div className="flex flex-wrap gap-2 print:hidden">
-                <button type="button" onClick={descargarCsv} className="btn-secondary">
+                <button type="button" onClick={descargarExcel} className="btn-secondary">
                   <Download size={16} className="mr-2" />
-                  Exportar CSV
+                  Exportar Excel
                 </button>
                 <button type="button" onClick={imprimir} className="btn-secondary">
                   <Printer size={16} className="mr-2" />
@@ -469,6 +478,16 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
 
       <style jsx global>{`
         @media print {
+          @page {
+            size: A4 landscape;
+            margin: 15mm;
+          }
+          body {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
           /* Hide everything outside the printable report */
           body * {
             visibility: hidden;
@@ -482,9 +501,79 @@ export default function AdminReportesPanel({ data, generadoEn }: Props) {
             left: 0;
             top: 0;
             width: 100%;
+            background: white !important;
           }
           .print\\:hidden {
             display: none !important;
+          }
+          .print\\:shadow-none {
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+          }
+          
+          /* Custom PDF Styling */
+          #reporte-printable .rounded-3xl {
+            border: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+          }
+          table {
+            border-collapse: collapse !important;
+            width: 100% !important;
+            margin-top: 15px !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+          }
+          th {
+            background-color: #0f172a !important; /* Dark slate */
+            color: #ffffff !important;
+            padding: 10px 14px !important;
+            font-size: 11px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            font-weight: 600 !important;
+          }
+          td {
+            padding: 10px 14px !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+            font-size: 12px !important;
+            color: #334155 !important;
+          }
+          tr:nth-child(even) td {
+            background-color: #f8fafc !important; /* Very light slate */
+          }
+          
+          /* Metric boxes in print */
+          .grid.gap-3 {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 15px !important;
+            margin-bottom: 20px !important;
+          }
+          .grid.gap-3 > div {
+            background-color: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 12px !important;
+            padding: 15px !important;
+          }
+          .grid.gap-3 > div p.text-xs {
+            color: #64748b !important;
+            font-size: 11px !important;
+            text-transform: uppercase !important;
+          }
+          .grid.gap-3 > div p.text-2xl, .grid.gap-3 > div p.text-sm.font-semibold {
+            color: #0f172a !important;
+            font-size: 18px !important;
+            font-weight: 700 !important;
+          }
+          
+          /* Report header in print */
+          .flex.justify-between.gap-3 {
+            border-bottom: 2px solid #e2e8f0 !important;
+            padding-bottom: 15px !important;
+            margin-bottom: 20px !important;
           }
         }
       `}</style>
