@@ -48,9 +48,19 @@ export default function AdminTareasPage() {
 
   async function cargar() {
     setCargando(true);
-    const res = await fetch("/api/admin/tareas");
-    setTareas(await res.json());
-    setCargando(false);
+    try {
+      const res = await fetch("/api/admin/tareas");
+      const data = await res.json();
+      if (res.ok && Array.isArray(data)) {
+        setTareas(data);
+      } else {
+        setTareas([]);
+      }
+    } catch {
+      setTareas([]);
+    } finally {
+      setCargando(false);
+    }
   }
 
   useEffect(() => {
