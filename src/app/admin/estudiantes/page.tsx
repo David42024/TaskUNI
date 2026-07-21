@@ -53,9 +53,19 @@ export default function AdminEstudiantesPage() {
 
   async function cargar() {
     setCargando(true);
-    const res = await fetch("/api/admin/estudiantes");
-    setEstudiantes(await res.json());
-    setCargando(false);
+    try {
+      const res = await fetch("/api/admin/estudiantes");
+      const data = await res.json();
+      if (res.ok && Array.isArray(data)) {
+        setEstudiantes(data);
+      } else {
+        setEstudiantes([]);
+      }
+    } catch {
+      setEstudiantes([]);
+    } finally {
+      setCargando(false);
+    }
   }
 
   useEffect(() => {

@@ -26,9 +26,19 @@ export default function AdminSoportePage() {
 
   async function cargar() {
     setCargando(true);
-    const res = await fetch("/api/soporte");
-    setConsultas(await res.json());
-    setCargando(false);
+    try {
+      const res = await fetch("/api/soporte");
+      const data = await res.json();
+      if (res.ok && Array.isArray(data)) {
+        setConsultas(data);
+      } else {
+        setConsultas([]);
+      }
+    } catch {
+      setConsultas([]);
+    } finally {
+      setCargando(false);
+    }
   }
 
   useEffect(() => {
@@ -64,7 +74,7 @@ export default function AdminSoportePage() {
 
       {cargando ? (
         <div className="card text-center text-slate-400">Cargando consultas...</div>
-      ) : consultas.length === 0 ? (
+      ) : !Array.isArray(consultas) || consultas.length === 0 ? (
         <div className="card text-center text-slate-400">No hay consultas registradas.</div>
       ) : (
         <div className="space-y-4">
