@@ -25,7 +25,6 @@ const apiEstudiante = [
   "/api/calendario",
   "/api/recordatorios",
   "/api/productividad",
-  "/api/soporte",
   "/api/archivos",
 ];
 
