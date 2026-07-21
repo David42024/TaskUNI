@@ -1,8 +1,6 @@
-import { getAdminOverview, formatMoney } from "@/lib/taskuni-data";
+import { getAdminOverview } from "@/lib/taskuni-data";
 import { getSesionActual } from "@/lib/session";
 import AdminReportesPanel from "@/components/AdminReportesPanel";
-import CardResumen from "@/components/CardResumen";
-import { Crown, DollarSign, LifeBuoy, Users } from "lucide-react";
 
 export default async function AdminReportesPage() {
   const session = await getSesionActual();
@@ -90,12 +88,6 @@ export default async function AdminReportesPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Reportes administrativos</h1>
         <p className="text-slate-500 dark:text-slate-400">Analiza el rendimiento del e-Business TaskUni mediante reportes de usuarios, suscripciones, pagos, soporte y uso académico.</p>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <CardResumen titulo="Usuarios registrados" valor={overview.totalUsuarios} icon={Users} color="brand" />
-        <CardResumen titulo="Usuarios Premium" valor={overview.usuariosPremium} icon={Crown} color="amber" />
-        <CardResumen titulo="Ingresos estimados" valor={formatMoney(overview.ingresosEstimados)} icon={DollarSign} color="green" />
-        <CardResumen titulo="Consultas pendientes" valor={overview.consultasPendientes} icon={LifeBuoy} color="red" />
       </div>
 
       <AdminReportesPanel data={data} generadoEn={generadoEn} />
