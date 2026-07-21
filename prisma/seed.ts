@@ -640,6 +640,7 @@ async function seedCourses(usuariosPorKey: MapaUsuarios): Promise<MapaCursos> {
     { key: "manuel-ingenieria-de-software",   usuarioKey: "manuel",  nombre: "Ingeniería de Software",         docente: "Ing. Vidal",     ciclo: "2026-I" },
     { key: "manuel-base-de-datos",           usuarioKey: "manuel",  nombre: "Base de Datos",                  docente: "Mg. Paredes",    ciclo: "2026-I" },
     { key: "manuel-inteligencia-artificial",  usuarioKey: "manuel",  nombre: "Inteligencia Artificial",        docente: "Dr. Rojas",      ciclo: "2026-I" },
+    { key: "manuel-redes-y-comunicaciones",   usuarioKey: "manuel",  nombre: "Redes y Comunicaciones",         docente: "Ing. Castro",    ciclo: "2026-I" },
     { key: "ana-redes-y-telecomunicaciones",  usuarioKey: "ana",     nombre: "Redes y Telecomunicaciones",     docente: "Ing. Castro",    ciclo: "2026-I" },
     { key: "ana-gestion-de-proyectos",        usuarioKey: "ana",     nombre: "Gestión de Proyectos",           docente: "MSc. Valdez",    ciclo: "2026-I" },
     { key: "ana-estadistica-aplicada",        usuarioKey: "ana",     nombre: "Estadística Aplicada",           docente: "Dra. Gómez",     ciclo: "2026-I" },
@@ -796,16 +797,22 @@ async function seedTasks(cursoMap: MapaCursos): Promise<void> {
         );
       }
 
+      const fechaLimite = addDays(now, diasLimite);
+      const completedAt = estado === EstadoTarea.completada
+        ? (diasLimite < 0 ? addDays(fechaLimite, 1) : fechaLimite)
+        : undefined;
+
       return prisma.tarea.create({
         data: {
           id_usuario: curso.id_usuario,
           id_curso: curso.id_curso,
           titulo,
           descripcion,
-          fecha_limite: addDays(now, diasLimite),
+          fecha_limite: fechaLimite,
           prioridad,
           estado_tarea: estado,
           avance_porcentual: avance,
+          completedAt,
         },
       });
     }
@@ -1403,6 +1410,176 @@ async function seedSupportRequests(usuariosPorKey: MapaUsuarios) {
   console.log("✅ Consultas de soporte creadas");
 }
 
+async function seedDemoProductividad(
+  usuariosPorKey: MapaUsuarios,
+  cursoMap: MapaCursos
+): Promise<void> {
+  const DEMO_PREFIX = "[DEMO-PRODUCTIVIDAD]";
+  const usuario = requireUser(usuariosPorKey, "manuel");
+
+  console.log("🌱 Creando datos demo de productividad para Manuel...");
+
+  type TareaDemo = {
+    cursoKey: string;
+    titulo: string;
+    descripcion: string;
+    creadaDias: number;
+    limiteDias: number;
+    prioridad: PrioridadTarea;
+    estado: EstadoTarea;
+    avance: number;
+    completadoDias?: number;
+  };
+
+  // 35 tasks: 22 completadas (17 on time, 5 late), 5 en_progreso, 5 pendientes, 3 vencidas
+  const tareasDemo: TareaDemo[] = [
+    // ===== Ingeniería de Software (7) =====
+    { cursoKey: "manuel-ingenieria-de-software", titulo: "Implementar módulo de autenticación JWT", descripcion: "Middleware de autenticación con JWT.", creadaDias: 25, limiteDias: -23, prioridad: PrioridadTarea.alta, estado: EstadoTarea.completada, avance: 100, completadoDias: 24 },
+    { cursoKey: "manuel-ingenieria-de-software", titulo: "Diseñar diagrama de clases UML", descripcion: "Diagrama completo del sistema.", creadaDias: 20, limiteDias: -18, prioridad: PrioridadTarea.media, estado: EstadoTarea.completada, avance: 100, completadoDias: 19 },
+    { cursoKey: "manuel-ingenieria-de-software", titulo: "Escribir pruebas unitarias del backend", descripcion: "Cobertura mínima del 80%.", creadaDias: 18, limiteDias: -15, prioridad: PrioridadTarea.alta, estado: EstadoTarea.completada, avance: 100, completadoDias: 13 },
+    { cursoKey: "manuel-ingenieria-de-software", titulo: "Optimizar consultas del dashboard", descripcion: "Mejorar tiempos de respuesta.", creadaDias: 16, limiteDias: -12, prioridad: PrioridadTarea.media, estado: EstadoTarea.completada, avance: 100, completadoDias: 13 },
+    { cursoKey: "manuel-ingenieria-de-software", titulo: "Configurar integración continua", descripcion: "Pipeline CI/CD con GitHub Actions.", creadaDias: 10, limiteDias: -7, prioridad: PrioridadTarea.alta, estado: EstadoTarea.completada, avance: 100, completadoDias: 8 },
+    { cursoKey: "manuel-ingenieria-de-software", titulo: "Refactorizar controladores REST", descripcion: "Aplicar principios SOLID.", creadaDias: 12, limiteDias: 4, prioridad: PrioridadTarea.media, estado: EstadoTarea.en_progreso, avance: 65 },
+    { cursoKey: "manuel-ingenieria-de-software", titulo: "Desplegar entorno de staging", descripcion: "Configurar servidor de pruebas.", creadaDias: 5, limiteDias: 8, prioridad: PrioridadTarea.baja, estado: EstadoTarea.pendiente, avance: 0 },
+
+    // ===== Base de Datos (7) =====
+    { cursoKey: "manuel-base-de-datos", titulo: "Normalizar esquema de base de datos", descripcion: "Aplicar 3FN.", creadaDias: 28, limiteDias: -25, prioridad: PrioridadTarea.alta, estado: EstadoTarea.completada, avance: 100, completadoDias: 26 },
+    { cursoKey: "manuel-base-de-datos", titulo: "Crear índices para búsqueda", descripcion: "Optimizar consultas frecuentes.", creadaDias: 22, limiteDias: -20, prioridad: PrioridadTarea.media, estado: EstadoTarea.completada, avance: 100, completadoDias: 21 },
+    { cursoKey: "manuel-base-de-datos", titulo: "Implementar procedimientos almacenados", descripcion: "SP para reportes críticos.", creadaDias: 22, limiteDias: -17, prioridad: PrioridadTarea.alta, estado: EstadoTarea.completada, avance: 100, completadoDias: 15 },
+    { cursoKey: "manuel-base-de-datos", titulo: "Migrar datos del sistema legacy", descripcion: "ETL desde sistema anterior.", creadaDias: 14, limiteDias: -10, prioridad: PrioridadTarea.alta, estado: EstadoTarea.completada, avance: 100, completadoDias: 11 },
+    { cursoKey: "manuel-base-de-datos", titulo: "Configurar réplica en caliente", descripcion: "Alta disponibilidad.", creadaDias: 8, limiteDias: -5, prioridad: PrioridadTarea.media, estado: EstadoTarea.completada, avance: 100, completadoDias: 6 },
+    { cursoKey: "manuel-base-de-datos", titulo: "Configurar replicación multiregión", descripcion: "Sincronización entre regiones.", creadaDias: -2, limiteDias: 6, prioridad: PrioridadTarea.media, estado: EstadoTarea.en_progreso, avance: 40 },
+    { cursoKey: "manuel-base-de-datos", titulo: "Diseñar modelo de datos para auditoría", descripcion: "Tablas de logging y auditoría.", creadaDias: 3, limiteDias: 10, prioridad: PrioridadTarea.baja, estado: EstadoTarea.pendiente, avance: 0 },
+
+    // ===== Inteligencia Artificial (7) =====
+    { cursoKey: "manuel-inteligencia-artificial", titulo: "Preprocesar dataset de entrenamiento", descripcion: "Limpieza y normalización.", creadaDias: 26, limiteDias: -24, prioridad: PrioridadTarea.alta, estado: EstadoTarea.completada, avance: 100, completadoDias: 25 },
+    { cursoKey: "manuel-inteligencia-artificial", titulo: "Entrenar modelo de clasificación", descripcion: "Random Forest con sklearn.", creadaDias: 21, limiteDias: -18, prioridad: PrioridadTarea.alta, estado: EstadoTarea.completada, avance: 100, completadoDias: 19 },
+    { cursoKey: "manuel-inteligencia-artificial", titulo: "Evaluar métricas del modelo", descripcion: "Precisión, recall y F1.", creadaDias: 19, limiteDias: -14, prioridad: PrioridadTarea.media, estado: EstadoTarea.completada, avance: 100, completadoDias: 12 },
+    { cursoKey: "manuel-inteligencia-artificial", titulo: "Implementar pipeline de inferencia", descripcion: "API de predicción en tiempo real.", creadaDias: 13, limiteDias: -9, prioridad: PrioridadTarea.alta, estado: EstadoTarea.completada, avance: 100, completadoDias: 10 },
+    { cursoKey: "manuel-inteligencia-artificial", titulo: "Ajustar hiperparámetros", descripcion: "Grid search con validación cruzada.", creadaDias: 7, limiteDias: 5, prioridad: PrioridadTarea.media, estado: EstadoTarea.en_progreso, avance: 55 },
+    { cursoKey: "manuel-inteligencia-artificial", titulo: "Visualizar resultados con gráficos", descripcion: "Matplotlib y Seaborn.", creadaDias: 18, limiteDias: -6, prioridad: PrioridadTarea.baja, estado: EstadoTarea.vencida, avance: 60 },
+    { cursoKey: "manuel-inteligencia-artificial", titulo: "Redactar informe del modelo", descripcion: "Documentación técnica.", creadaDias: 1, limiteDias: 14, prioridad: PrioridadTarea.media, estado: EstadoTarea.pendiente, avance: 0 },
+
+    // ===== Negocios Electrónicos (7) =====
+    { cursoKey: "manuel-negocios-electronicos", titulo: "Analizar competidores del sector", descripcion: "Benchmark de mercado.", creadaDias: 27, limiteDias: -25, prioridad: PrioridadTarea.alta, estado: EstadoTarea.completada, avance: 100, completadoDias: 26 },
+    { cursoKey: "manuel-negocios-electronicos", titulo: "Definir propuesta de valor", descripcion: "Value proposition canvas.", creadaDias: 23, limiteDias: -20, prioridad: PrioridadTarea.alta, estado: EstadoTarea.completada, avance: 100, completadoDias: 22 },
+    { cursoKey: "manuel-negocios-electronicos", titulo: "Diseñar modelo de negocio canvas", descripcion: "Business Model Canvas.", creadaDias: 20, limiteDias: -16, prioridad: PrioridadTarea.media, estado: EstadoTarea.completada, avance: 100, completadoDias: 14 },
+    { cursoKey: "manuel-negocios-electronicos", titulo: "Realizar estudio de mercado", descripcion: "Encuesta y análisis de datos.", creadaDias: 15, limiteDias: -11, prioridad: PrioridadTarea.alta, estado: EstadoTarea.completada, avance: 100, completadoDias: 12 },
+    { cursoKey: "manuel-negocios-electronicos", titulo: "Elaborar plan de marketing digital", descripcion: "Estrategia multicanal.", creadaDias: 9, limiteDias: 3, prioridad: PrioridadTarea.media, estado: EstadoTarea.en_progreso, avance: 70 },
+    { cursoKey: "manuel-negocios-electronicos", titulo: "Calcular proyecciones financieras", descripcion: "Flujo de caja proyectado.", creadaDias: 4, limiteDias: 9, prioridad: PrioridadTarea.media, estado: EstadoTarea.pendiente, avance: 0 },
+    { cursoKey: "manuel-negocios-electronicos", titulo: "Preparar pitch de inversión", descripcion: "Presentación ejecutiva.", creadaDias: 17, limiteDias: -5, prioridad: PrioridadTarea.alta, estado: EstadoTarea.vencida, avance: 45 },
+
+    // ===== Redes y Comunicaciones (7) =====
+    { cursoKey: "manuel-redes-y-comunicaciones", titulo: "Diseñar topología de red", descripcion: "Topología jerárquica.", creadaDias: 29, limiteDias: -26, prioridad: PrioridadTarea.alta, estado: EstadoTarea.completada, avance: 100, completadoDias: 27 },
+    { cursoKey: "manuel-redes-y-comunicaciones", titulo: "Configurar VLANs en switches", descripcion: "Segmentación de red.", creadaDias: 24, limiteDias: -21, prioridad: PrioridadTarea.alta, estado: EstadoTarea.completada, avance: 100, completadoDias: 22 },
+    { cursoKey: "manuel-redes-y-comunicaciones", titulo: "Implementar protocolo OSPF", descripcion: "Enrutamiento dinámico.", creadaDias: 21, limiteDias: -16, prioridad: PrioridadTarea.media, estado: EstadoTarea.completada, avance: 100, completadoDias: 14 },
+    { cursoKey: "manuel-redes-y-comunicaciones", titulo: "Realizar auditoría de seguridad", descripcion: "Escaneo de vulnerabilidades.", creadaDias: 12, limiteDias: -8, prioridad: PrioridadTarea.alta, estado: EstadoTarea.completada, avance: 100, completadoDias: 9 },
+    { cursoKey: "manuel-redes-y-comunicaciones", titulo: "Configurar firewall corporativo", descripcion: "Reglas de seguridad perimetral.", creadaDias: 6, limiteDias: 2, prioridad: PrioridadTarea.alta, estado: EstadoTarea.en_progreso, avance: 50 },
+    { cursoKey: "manuel-redes-y-comunicaciones", titulo: "Documentar infraestructura de red", descripcion: "Diagramas y manuales.", creadaDias: 3, limiteDias: 7, prioridad: PrioridadTarea.baja, estado: EstadoTarea.pendiente, avance: 0 },
+    { cursoKey: "manuel-redes-y-comunicaciones", titulo: "Monitorear tráfico de red", descripcion: "Análisis con Wireshark.", creadaDias: 14, limiteDias: -3, prioridad: PrioridadTarea.media, estado: EstadoTarea.vencida, avance: 35 },
+  ];
+
+  for (const t of tareasDemo) {
+    const curso = requireCourse(cursoMap, t.cursoKey);
+    const fechaCreacion = addDays(now, -t.creadaDias);
+    const fechaLimite = addDays(now, t.limiteDias);
+    const completado = t.completadoDias !== undefined ? addDays(now, -t.completadoDias) : undefined;
+
+    await prisma.tarea.create({
+      data: {
+        id_usuario: usuario.id_usuario,
+        id_curso: curso.id_curso,
+        titulo: `${DEMO_PREFIX} ${t.titulo}`,
+        descripcion: t.descripcion,
+        fecha_creacion: fechaCreacion,
+        fecha_limite: fechaLimite,
+        prioridad: t.prioridad,
+        estado_tarea: t.estado,
+        avance_porcentual: t.avance,
+        completedAt: completado,
+      },
+    });
+  }
+
+  // Eventos próximos (8 para Manuel en los próximos 20 días)
+  const eventosDemo: Array<[string, string, TipoEvento, number, string | null, number, number]> = [
+    ["manuel", "Sprint Review TaskUni", TipoEvento.reunion, 1, "Google Meet", 10, 60],
+    ["manuel", "Entrega de avance de Negocios Electrónicos", TipoEvento.entrega, 3, null, 23, 30],
+    ["manuel", "Examen parcial de Inteligencia Artificial", TipoEvento.examen, 5, "Aula 301 - FIIS", 8, 120],
+    ["manuel", "Reunión de coordinación de proyecto", TipoEvento.reunion, 7, "Sala de reuniones", 15, 60],
+    ["manuel", "Entrega de informe BD", TipoEvento.entrega, 10, null, 23, 59],
+    ["manuel", "Defensa de proyecto de Redes", TipoEvento.examen, 12, "Laboratorio de Redes", 9, 120],
+    ["manuel", "Workshop de IA - Redes Neuronales", TipoEvento.otro, 15, "Aula Magna", 14, 180],
+    ["manuel", "Cierre de notas - Ingeniería de Software", TipoEvento.examen, 18, null, 23, 59],
+  ];
+
+  for (const [usuarioKey, titulo, tipo, dias, ubicacion, horaInicio, duracionMinutos] of eventosDemo) {
+    const u = requireUser(usuariosPorKey, usuarioKey);
+    const fechaBase = addDays(now, dias);
+    const fechaInicio = withTime(fechaBase, horaInicio);
+    await prisma.eventoCalendario.create({
+      data: {
+        id_usuario: u.id_usuario,
+        titulo: `${DEMO_PREFIX} ${titulo}`,
+        tipo_evento: tipo,
+        fecha_inicio: fechaInicio,
+        fecha_fin: addMinutes(fechaInicio, duracionMinutos),
+        ubicacion,
+        estado: "programado",
+      },
+    });
+  }
+
+  // Recordatorios relacionados (6 para Manuel)
+  const recordatoriosDemo: Array<[string, string, string, TipoRecordatorio, EstadoRecordatorio, number]> = [
+    ["manuel", "Revisar preparación de sprint review", "Tienes un sprint review mañana", TipoRecordatorio.inteligente, EstadoRecordatorio.pendiente, 0],
+    ["manuel", "Entregar avance de Negocios Electrónicos", "Entrega en 3 días", TipoRecordatorio.inteligente, EstadoRecordatorio.pendiente, 3],
+    ["manuel", "Estudiar para examen de IA", "Examen parcial en 5 días", TipoRecordatorio.inteligente, EstadoRecordatorio.pendiente, 2],
+    ["manuel", "Revisión de proyecto final", "Coordinación con el equipo", TipoRecordatorio.basico, EstadoRecordatorio.pendiente, 5],
+    ["manuel", "No romper racha de productividad", "Llevas varios días consecutivos", TipoRecordatorio.inteligente, EstadoRecordatorio.pendiente, 1],
+    ["manuel", "Preparar informe de Base de Datos", "Entrega en 10 días", TipoRecordatorio.basico, EstadoRecordatorio.pendiente, 7],
+  ];
+
+  await prisma.recordatorio.createMany({
+    data: recordatoriosDemo.map(([usuarioKey, titulo, descripcion, tipo, estado, offset]) => ({
+      id_usuario: usuariosPorKey[usuarioKey].id_usuario,
+      titulo: `${DEMO_PREFIX} ${titulo}`,
+      descripcion,
+      tipo_recordatorio: tipo,
+      estado,
+      fecha_recordatorio: addDays(now, offset),
+    })),
+  });
+
+  // Reportes de productividad semanales para los últimos 4 periodos
+  // Semanas: día -28 a -21 (57%), -21 a -14 (75%), -14 a -7 (78%), -7 a 0 (63%)
+  const reportesDemo = [
+    { periodo: "Semana 1", desde: -28, total: 7, completadas: 4, vencidas: 1, porcentaje: 57, racha: 3 },
+    { periodo: "Semana 2", desde: -21, total: 8, completadas: 6, vencidas: 1, porcentaje: 75, racha: 5 },
+    { periodo: "Semana 3", desde: -14, total: 9, completadas: 7, vencidas: 1, porcentaje: 78, racha: 8 },
+    { periodo: "Semana 4", desde: -7, total: 8, completadas: 5, vencidas: 1, porcentaje: 63, racha: 11 },
+  ];
+
+  for (const r of reportesDemo) {
+    const fecha = addDays(now, r.desde);
+    await prisma.reporteProductividad.create({
+      data: {
+        id_usuario: usuario.id_usuario,
+        periodo: `${fecha.getFullYear()}-W${Math.ceil((fecha.getDate() + 1) / 7)}`,
+        total_tareas: r.total,
+        tareas_completadas: r.completadas,
+        tareas_pendientes: r.total - r.completadas - r.vencidas,
+        tareas_vencidas: r.vencidas,
+        porcentaje_cumplimiento: r.porcentaje,
+        racha_productividad: r.racha,
+        fecha_generacion: fecha,
+      },
+    });
+  }
+
+  console.log("✅ Datos demo de productividad creados");
+}
+
 async function validateSeed(): Promise<void> {
   console.log("🔎 Validando consistencia del seed...");
 
@@ -1610,6 +1787,7 @@ async function main(): Promise<void> {
   await seedReminders(usuariosPorKey);
   await seedProductivityReports(usuariosPorKey);
   await seedSupportRequests(usuariosPorKey);
+  await seedDemoProductividad(usuariosPorKey, cursoMap);
 
   await validateSeed();
   await printSummary();

@@ -191,6 +191,7 @@ model Tarea {
   avance_porcentual   Int            @default(0)
   fecha_creacion      DateTime       @default(now())
   fecha_actualizacion DateTime       @updatedAt
+  completedAt         DateTime?
 
   usuario       Usuario        @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
   curso         Curso?         @relation(fields: [id_curso], references: [id_curso], onDelete: SetNull)

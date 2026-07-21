@@ -34,8 +34,7 @@ export default function LoginPage() {
     // Redirige según rol consultando la sesión recién creada
     const res = await fetch("/api/auth/session");
     const session = await res.json();
-    router.push(session?.user?.rol === "administrador" ? "/admin" : "/dashboard");
-    router.refresh();
+    router.replace(session?.user?.rol === "administrador" ? "/admin" : "/dashboard");
   }
 
   return (

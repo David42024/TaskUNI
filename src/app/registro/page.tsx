@@ -50,8 +50,7 @@ export default function RegistroPage() {
         return;
       }
 
-      router.push("/dashboard");
-      router.refresh();
+      router.replace("/dashboard");
     } catch (err) {
       setError("Ocurrió un error inesperado.");
       setCargando(false);

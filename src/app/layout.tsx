@@ -5,7 +5,7 @@ import Providers from "@/components/Providers";
 export const metadata: Metadata = {
   title: "TaskUni | Organiza tu vida universitaria",
   description:
-    "TaskUni centraliza tareas, proyectos grupales, calendario y productividad académica en una sola plataforma.",
+    "Gestiona tareas, proyectos grupales, entregas, calendario y productividad académica desde una sola plataforma.",
 };
 
 export default function RootLayout({

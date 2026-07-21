@@ -35,7 +35,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
           fecha_limite: datos.fecha_limite ? new Date(datos.fecha_limite) : null,
         }),
         ...(datos.prioridad !== undefined && { prioridad: datos.prioridad }),
-        ...(datos.estado_tarea !== undefined && { estado_tarea: datos.estado_tarea }),
+        ...(datos.estado_tarea !== undefined && {
+          estado_tarea: datos.estado_tarea,
+          completedAt: datos.estado_tarea === "completada" ? new Date() : null,
+        }),
         ...(datos.avance_porcentual !== undefined && {
           avance_porcentual: datos.avance_porcentual,
         }),

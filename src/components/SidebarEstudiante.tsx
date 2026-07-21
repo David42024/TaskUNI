@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useCallback, useEffect, useState } from "react";
 import clsx from "clsx";
 import {
   AlarmClock,
@@ -10,10 +11,8 @@ import {
   CalendarDays,
   ChevronRight,
   CircleGauge,
-  Cloud,
   Crown,
   FileText,
-  GraduationCap,
   LayoutDashboard,
   ListChecks,
   LogOut,
@@ -28,32 +27,62 @@ export type SidebarEstudianteProps = {
   onClose: () => void;
   nombre: string;
   planActual: string;
+  esGratuito: boolean;
   tareasBadge: number;
   recordatoriosBadge: number;
   proyectosBadge: number;
 };
 
-const items = [
+interface NavItem {
+  href: string;
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ size?: number }>;
+  premiumOnly?: boolean;
+}
+
+const items: NavItem[] = [
   { href: "/dashboard", label: "Inicio / Dashboard", description: "Resumen general del estudiante.", icon: LayoutDashboard },
   { href: "/tareas", label: "Mis tareas", description: "Tareas académicas individuales.", icon: ListChecks },
   { href: "/proyectos", label: "Proyectos grupales", description: "Trabajos colaborativos y equipos.", icon: Users },
   { href: "/calendario", label: "Calendario", description: "Fechas de entrega, reuniones y exámenes.", icon: CalendarDays },
   { href: "/recordatorios", label: "Recordatorios", description: "Alertas de actividades próximas.", icon: Bell },
-  { href: "/soporte", label: "Soporte", description: "Consultas y ayuda de la plataforma.", icon: AlarmClock },
-  { href: "/productividad", label: "Productividad", description: "Progreso, racha y cumplimiento.", icon: CircleGauge },
+  { href: "/productividad", label: "Productividad", description: "Progreso, racha y cumplimiento.", icon: CircleGauge, premiumOnly: true },
   { href: "/cursos", label: "Cursos", description: "Asignaturas o cursos registrados.", icon: BookOpen },
   { href: "/archivos", label: "Archivos", description: "Materiales y recursos académicos.", icon: FileText },
+  { href: "/soporte", label: "Soporte", description: "Consultas y ayuda de la plataforma.", icon: AlarmClock },
 ];
 
 function SidebarContent({
   nombre,
-  planActual,
+  planActual: planActualInicial,
+  esGratuito: esGratuitoInicial,
   tareasBadge,
   recordatoriosBadge,
   proyectosBadge,
   onClose,
 }: Omit<SidebarEstudianteProps, "open">) {
   const pathname = usePathname();
+  const [planActual, setPlanActual] = useState(planActualInicial);
+  const [esGratuito, setEsGratuito] = useState(esGratuitoInicial);
+
+  const fetchSuscripcion = useCallback(() => {
+    fetch("/api/suscripcion")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.plan) {
+          setPlanActual(data.plan.nombre_plan);
+          setEsGratuito(data.plan.tipo_plan !== "premium");
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchSuscripcion();
+    window.addEventListener("taskuni-plan-changed", fetchSuscripcion);
+    return () => window.removeEventListener("taskuni-plan-changed", fetchSuscripcion);
+  }, [fetchSuscripcion]);
 
   const badgeMap: Record<string, string | number | null> = {
     "/tareas": tareasBadge,
@@ -62,7 +91,7 @@ function SidebarContent({
     "/soporte": "24/7",
   };
 
-  const isDark = true;
+  const visibleItems = items;
 
   return (
     <div className="flex h-full flex-col bg-white text-slate-800 shadow-[0_20px_50px_rgba(15,23,42,0.08)] dark:bg-slate-950 dark:text-slate-100">
@@ -77,28 +106,30 @@ function SidebarContent({
           </div>
         </Link>
 
-        <div className="mt-4 rounded-2xl border border-brand-100 bg-brand-50 px-4 py-3 dark:border-brand-400/20 dark:bg-brand-500/10">
-          <p className="text-sm font-semibold text-brand-800 dark:text-brand-100">{nombre}</p>
-          <p className="text-xs text-brand-700/80 dark:text-brand-200/80">Plan actual: {planActual}</p>
+        <div className="mt-4 rounded-2xl border border-brand-100 bg-brand-50 px-4 py-3 dark:border-brand-700/30 dark:bg-brand-900/30">
+          <p className="text-sm font-semibold text-brand-800 dark:text-brand-200">{nombre}</p>
+          <p className="text-xs text-brand-700/80 dark:text-brand-300/80">Plan actual: {planActual}</p>
         </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <div className="space-y-1">
-          {items.map(({ href, label, description, icon: Icon }) => {
+          {visibleItems.map(({ href, label, description, icon: Icon, premiumOnly }) => {
             const active = pathname === href;
             const badge = badgeMap[href];
+            const esPremiumItemBloqueado = esGratuito && premiumOnly;
 
             return (
               <Link
                 key={href}
-                href={href}
+                href={esPremiumItemBloqueado ? "/planes" : href}
                 onClick={onClose}
                 className={clsx(
                   "group flex items-start gap-3 rounded-2xl px-3 py-3 text-sm transition",
                   active
                     ? "bg-brand-50 text-brand-700 shadow-sm ring-1 ring-brand-100 dark:bg-brand-500/15 dark:text-brand-200 dark:ring-brand-400/20"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white",
+                  esPremiumItemBloqueado && "opacity-70"
                 )}
               >
                 <span
@@ -114,7 +145,11 @@ function SidebarContent({
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center justify-between gap-2">
                     <span className="truncate font-medium">{label}</span>
-                    {badge !== undefined && badge !== null ? (
+                    {esPremiumItemBloqueado ? (
+                      <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-semibold text-brand-700 dark:bg-brand-500/20 dark:text-brand-100">
+                        Premium
+                      </span>
+                    ) : badge !== undefined && badge !== null ? (
                       <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-semibold text-brand-700 dark:bg-brand-500/20 dark:text-brand-100">
                         {badge}
                       </span>
@@ -146,7 +181,7 @@ function SidebarContent({
               </span>
               <span>
                 <span className="block font-medium">Plan actual</span>
-                <span className="block text-xs text-slate-500 dark:text-slate-400">Gratuito o Premium</span>
+                <span className="block text-xs text-slate-500 dark:text-slate-400">{planActual}</span>
               </span>
             </span>
           </Link>
@@ -173,19 +208,21 @@ function SidebarContent({
           </Link>
         </div>
 
-        <div className="mt-5 rounded-3xl bg-gradient-to-br from-brand-600 to-violet-600 p-4 text-white shadow-lg shadow-brand-500/20">
-          <p className="text-sm font-semibold">Mejora tu organización</p>
-          <p className="mt-1 text-xs text-brand-50/90">
-            Desbloquea reportes, recordatorios inteligentes y proyectos avanzados.
-          </p>
-          <Link
-            href="/planes"
-            onClick={onClose}
-            className="mt-4 inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
-          >
-            Actualizar a Premium
-          </Link>
-        </div>
+        {esGratuito ? (
+          <div className="mt-5 rounded-3xl bg-gradient-to-br from-brand-600 to-violet-600 p-4 text-white shadow-lg shadow-brand-500/20">
+            <p className="text-sm font-semibold">Mejora tu organización</p>
+            <p className="mt-1 text-xs text-brand-50/90">
+              Desbloquea reportes, recordatorios inteligentes y proyectos avanzados.
+            </p>
+            <Link
+              href="/planes"
+              onClick={onClose}
+              className="mt-4 inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
+            >
+              Actualizar a Premium
+            </Link>
+          </div>
+        ) : null}
       </nav>
 
       <div className="border-t border-slate-200 p-3 dark:border-white/10">

@@ -141,8 +141,8 @@ export default function HeaderEstudiante({
                   {obtenerIniciales(nombre)}
                 </span>
                 <span className="hidden min-w-0 lg:block">
-                  <span className="block truncate text-sm font-semibold text-slate-900">{nombre}</span>
-                  <span className="block truncate text-xs text-slate-500">
+                  <span className="block truncate text-sm font-semibold text-slate-900 dark:text-white">{nombre}</span>
+                  <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
                     {carrera} · {ciclo}
                   </span>
                 </span>
@@ -258,20 +258,20 @@ export default function HeaderEstudiante({
             </div>
 
             <div className="mt-4 grid gap-2">
-              <Link href="/dashboard" className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
-                <LayoutDashboard size={16} className="text-brand-600" />
+              <Link href="/dashboard" className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/5">
+                <LayoutDashboard size={16} className="text-brand-600 dark:text-brand-400" />
                 Resumen académico
               </Link>
-              <Link href="/tareas" className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
-                <BookOpen size={16} className="text-brand-600" />
+              <Link href="/tareas" className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/5">
+                <BookOpen size={16} className="text-brand-600 dark:text-brand-400" />
                 Mis tareas
               </Link>
-              <Link href="/proyectos" className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
-                <FolderKanban size={16} className="text-brand-600" />
+              <Link href="/proyectos" className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/5">
+                <FolderKanban size={16} className="text-brand-600 dark:text-brand-400" />
                 Proyectos grupales
               </Link>
-              <Link href="/calendario" className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
-                <CalendarDays size={16} className="text-brand-600" />
+              <Link href="/calendario" className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/5">
+                <CalendarDays size={16} className="text-brand-600 dark:text-brand-400" />
                 Calendario y entregas
               </Link>
               <button
@@ -281,7 +281,7 @@ export default function HeaderEstudiante({
                     window.location.href = "/";
                   });
                 }}
-                className="flex items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-medium text-red-600 transition hover:bg-red-50"
+                className="flex items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
               >
                 <ChevronDown size={16} className="rotate-90" />
                 Cerrar sesión
