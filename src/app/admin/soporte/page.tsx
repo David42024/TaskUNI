@@ -88,9 +88,19 @@ export default function AdminSoportePage() {
 
   async function cargar() {
     setCargando(true);
-    const res = await fetch("/api/soporte");
-    setConsultas(await res.json());
-    setCargando(false);
+    try {
+      const res = await fetch("/api/soporte");
+      const data = await res.json();
+      if (res.ok && Array.isArray(data)) {
+        setConsultas(data);
+      } else {
+        setConsultas([]);
+      }
+    } catch {
+      setConsultas([]);
+    } finally {
+      setCargando(false);
+    }
   }
 
   useEffect(() => {
@@ -252,6 +262,7 @@ export default function AdminSoportePage() {
       </div>
 
       {cargando ? (
+
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="card animate-pulse space-y-4">
